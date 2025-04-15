@@ -13,11 +13,9 @@ run = True
 screen_w=1600
 screen_h=900
 
-#as fontes que funcinam são -227 -223 -194 -171 -139 -134 -87 -84 -68 14 18 47 70 94 102 107 154 157 173
-#as que lidam bem com pontuação 94
-valdafonte=94
 fontsize = int(screen_h / 25)
-font = pygame.font.SysFont(pygame.font.get_fonts()[valdafonte], fontsize)
+fonte = 'font/Vipnagorgialla Rg.otf'
+font = pygame.font.Font(fonte, fontsize)
 
 screen = pygame.display.set_mode((screen_w, screen_h), pygame.RESIZABLE)
 sw = (screen.get_width() / 15)
@@ -29,10 +27,10 @@ andamento=0
 hold_lr=0
 hold_ud=0
 
-idioma=('jogo/strings/strings-pt-br')
+idioma=('strings/strings-pt-br')
 istringi=(open(idioma).readlines())
 
-msc_mainmenu = pygame.mixer_music.load('jogo/st/atelier')
+msc_mainmenu = pygame.mixer_music.load('soundtrack/atelier.mp3')
 vol_music=15
 volume_multiplier=20
 
@@ -45,12 +43,7 @@ def constfont(valor):
     global valdafonte
 
     fontsize = int(screen_h / 25)
-
-
-    #as fontes que funcinam são 14 18 47 70 94 102 107
-    valdafonte = valdafonte + valor
-    
-    font = pygame.font.SysFont(pygame.font.get_fonts()[valdafonte], fontsize)
+    font = pygame.font.Font(fonte, fontsize)
 
 def select_ud(select, limite):
 
@@ -163,12 +156,16 @@ def menu1():
         # PELO AMOR DE DEUS NÃO MEXE
         for opt in range(0, limite2):
             draw_text(istringi[opt+liststart], font, check_sl(select, opt), sw, sh+(fontsize*opt*1.40))
+            if opt == 1: pygame.draw.rect(screen, (255, 255, 255), ((screen.get_width() / 2), sh+(fontsize*opt*1.75), fontsize*vol_music/2, fontsize/2))
+
         draw_text(istringi[liststart+limite2], font, check_sl(select, limite2), sw, sh+((fontsize*limite2)+(3*fontsize)))
 
         if select == 1:
 
             vol_music = select_lr(vol_music, volume_multiplier)
             pygame.mixer.music.set_volume(float(vol_music/volume_multiplier))
+            
+
 
 
 
@@ -186,7 +183,7 @@ def menu1():
         loopgeral()
   
 def draw_text(text, font, text_col, x, y):
-  img = font.render(text, True, text_col)
+  img = font.render(text[:-1], True, text_col)
   screen.blit(img, (x, y))
 
 def sair():
@@ -234,7 +231,7 @@ def loopgeral():
         sh = (screen.get_height() / 4)
 
         fontsize = int(screen.get_height() / 25)
-        font = pygame.font.SysFont(pygame.font.get_fonts()[valdafonte], fontsize)
+        font = pygame.font.Font(fonte, fontsize)
     
 
     print(pygame.mixer.music.get_volume())

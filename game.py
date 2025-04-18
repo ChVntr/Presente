@@ -46,7 +46,7 @@ def select_ud(select, limite):
         select = 0
 
 
-    print(select)
+    #print(select)
     return select
 
 def select_lr(select, limite):
@@ -89,8 +89,6 @@ def check_sl(esseaqui, tanesse):
 
 def menu1():
 
-    global andamento
-
     select = 0
     menu = 1
 
@@ -116,7 +114,8 @@ def menu1():
                     menu=2
                 elif select == limite-1:
                     pygame.quit()
-                    quit()
+                elif select == limite-4:
+                    return 1
 
         limite = limite + save_variavel
         loopgeral()
@@ -169,7 +168,7 @@ def menu1():
                 
 
 
-        loopgeral()
+        return 0
   
 def draw_text(text, font, text_col, x, y):
     img = font.render(text[:-1], True, text_col)
@@ -184,6 +183,7 @@ def sair():
         if event.type == pygame.QUIT:            
             pygame.quit()
             quit()
+            exit()
 
 def mvmdir(obj):
 
@@ -209,7 +209,12 @@ def praondeagora(simbora):
         pygame.mixer.music.play(0)
         pygame.mixer.music.set_volume(float(vol_music/volume_multiplier))
         while simbora == 0:
-            menu1()
+            result = menu1()
+            if result != 0: break
+        return result
+    elif simbora == 1:
+        print('agora faz oq kkkkkk')
+        pygame.quit()
 
 def loopgeral():
 
@@ -236,7 +241,8 @@ def loopgeral():
     #clock.tick(), print(clock.get_fps())
     screen.fill((0, 0, 0))
 
-
+def hora_do_pau():
+    ''
 
 
 
@@ -299,6 +305,6 @@ teclas_baixo = (pygame.K_DOWN, pygame.K_s)
 
 # loop principal do jogo
 while True:
-    praondeagora(andamento)
+    andamento = praondeagora(andamento)
     loopgeral()
 

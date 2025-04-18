@@ -107,15 +107,14 @@ def menu1():
         draw_text(istringi[limite-1+save_variavel], font, check_sl(select, limite-1), sw, sh+((fontsize*limite)+(3*fontsize)))
 
 
-        key = pygame.key.get_pressed()
-        for tecla in teclas_confirmar:
-            if key[tecla]:
-                if select == limite-3:
-                    menu=2
-                elif select == limite-1:
-                    pygame.quit()
-                elif select == limite-4:
-                    return 1
+        if select_confirmar():
+            if select == limite-3:
+                menu=2
+            elif select == limite-1:
+                pygame.quit()
+            elif select == limite-4:
+                return 1
+            break
 
         limite = limite + save_variavel
         loopgeral()
@@ -155,20 +154,17 @@ def menu1():
 
 
 
-
-        key = pygame.key.get_pressed()
-        for tecla in teclas_confirmar:
-            if key[tecla]:
-                if select == limite2:
-                    menu=1
+        if select_confirmar():
+            if select == limite2: 
+                break
                     
-                    
+        loopgeral()   
                     
 
                 
 
-
-        return 0
+    loopgeral() 
+    return 0
   
 def draw_text(text, font, text_col, x, y):
     img = font.render(text[:-1], True, text_col)
@@ -209,11 +205,16 @@ def praondeagora(simbora):
         pygame.mixer.music.play(0)
         pygame.mixer.music.set_volume(float(vol_music/volume_multiplier))
         while simbora == 0:
-            result = menu1()
-            if result != 0: break
-        return result
+            simbora = menu1()
+        return simbora
     elif simbora == 1:
         print('agora faz oq kkkkkk')
+        pygame.mixer.music.fadeout(3)
+        while True:
+            # botar um fade out maneiro aqui
+            ''
+            break
+        hora_do_pau()
         pygame.quit()
 
 def loopgeral():
@@ -238,11 +239,33 @@ def loopgeral():
     
     sair()
     pygame.display.update()
-    #clock.tick(), print(clock.get_fps())
+    clock.tick()
+    #print(clock.get_fps())
     screen.fill((0, 0, 0))
 
 def hora_do_pau():
     ''
+
+def select_confirmar():
+
+    global hold_confirmar
+
+    key = pygame.key.get_pressed()
+    if not hold_confirmar:
+        for tecla in teclas_confirmar:
+            if key[tecla]:
+                hold_confirmar = True
+                return True
+    else:
+        for tecla in teclas_confirmar:
+            if key[tecla]:
+                hold_confirmar = True
+                return False
+            hold_confirmar = False
+
+    return False
+
+
 
 
 
@@ -278,6 +301,7 @@ andamento=0
 
 hold_lr=0
 hold_ud=0
+hold_confirmar=False
 
 idioma=('strings/strings-pt-br')
 istringi=(open(idioma).readlines())

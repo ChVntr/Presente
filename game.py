@@ -156,14 +156,19 @@ def menu1():
         for opt in range(0, limite2):
             draw_text(istringi[opt+liststart], font, check_sl(select, opt), sw, sh+(fontsize*opt*1.40))
             if opt == 0:
-                pygame.draw.rect(screen, check_sl(select, opt), ((screen.get_width() / 2), sh+(fontsize*opt)+(fontsize*0.3), fontsize*vol_music/2, fontsize/2))
-            #print(fontsize)
+                barra_pos_h = sh+(fontsize*opt)+(fontsize*0.3)
+                barra_pos_w = (screen.get_width() / 2)
+                barra_multiplicador = 0.005
+                pygame.draw.rect(screen, check_sl(select, opt), (barra_pos_w, barra_pos_h, fontsize*vol_music/2, fontsize/2))
+                pygame.draw.rect(screen, check_sl(select, opt), (barra_pos_w-(barra_pos_w*barra_multiplicador), barra_pos_h-(barra_pos_h*barra_multiplicador*2.5), 2, fontsize/1.5))
+                pygame.draw.rect(screen, check_sl(select, opt), (barra_pos_w+(barra_pos_w*barra_multiplicador)+(fontsize*10), barra_pos_h-(barra_pos_h*barra_multiplicador*2.5), 2, fontsize/1.5))
+            #print(fontsize*vol_music/2, fontsize*10, fontsize, vol_music)
 
         draw_text(istringi[liststart+limite2], font, check_sl(select, limite2), sw, sh+((fontsize*limite2)+(3*fontsize)))
 
         if select == 0:
 
-            vol_music = select_lr(vol_music, volume_multiplier)
+            vol_music = select_lr(vol_music, volume_multiplier+1)
             pygame.mixer.music.set_volume(float(vol_music/volume_multiplier))
             
 
@@ -187,7 +192,7 @@ def draw_text(text, font, text_col, x, y):
     img = font.render(text[:-1], True, text_col)
     screen.blit(img, (x, y))
 
-    #pygame.draw.rect(screen, (255, 0, 0), (0, y, screen.get_width(), 2))
+    pygame.draw.rect(screen, (255, 0, 0), (0, y, screen.get_width(), 2))
     #print(text_col)
 
 def sair():

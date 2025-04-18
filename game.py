@@ -53,14 +53,21 @@ def select_ud(select, limite):
     
 
     if hold_ud == 0:
-        if key[pygame.K_UP] == True or key[pygame.K_w] ==True:
-            select = select -1
-            hold_ud=1
-        elif key[pygame.K_DOWN] == True or key[pygame.K_s] ==True:
-            select = select +1
-            hold_ud=1
+        for tecla in teclas_cima:
+            if key[tecla]:
+                select = select -1
+                hold_ud=1
+                break
+        for tecla in teclas_baixo:
+            if key[tecla]:
+                select = select +1
+                hold_ud=1
+                break
     else:
-        if key[pygame.K_UP] != True and key[pygame.K_DOWN] != True and key[pygame.K_s] != True and key[pygame.K_w] != True:
+        for tecla in teclas_cima + teclas_baixo:
+            if key[tecla]:
+                hold_ud=1
+                break
             hold_ud=0
 
 
@@ -70,7 +77,7 @@ def select_ud(select, limite):
         select = 0
 
 
-    
+    print(select)
     return select
 
 def select_lr(select, limite):
@@ -120,36 +127,42 @@ def menu1():
 
     while menu==1:
 
+        if not tem_save:
+            save_variavel = 1
+        else:
+            save_variavel = 0
 
-        limite=5
+        limite=5-save_variavel
         select = select_ud(select, limite)
 
-        for opt in range(0,limite-1):
-            draw_text(istringi[opt], font, check_sl(select, opt), sw, sh+(fontsize*opt*1.4))
-        draw_text(istringi[limite-1], font, check_sl(select, limite-1), sw, sh+((fontsize*limite)+(3*fontsize)))
+        for opt in range(0, limite-1):
+            draw_text(istringi[opt+save_variavel], font, check_sl(select, opt), sw, sh+(fontsize*opt*1.4))
+        draw_text(istringi[limite-1+save_variavel], font, check_sl(select, limite-1), sw, sh+((fontsize*limite)+(3*fontsize)))
 
 
         key = pygame.key.get_pressed()
-        
-        if key[pygame.K_KP_ENTER] or key[pygame.KSCAN_KP_ENTER] or key[pygame.K_SPACE] or key[pygame.K_RETURN] or key[pygame.KSCAN_RETURN] == True:
-            if select == 2:
-                menu=2
-            elif select == limite-1:
-                pygame.quit()
-                quit()
+        for tecla in teclas_confirmar:
+            if key[tecla]:
+                if select == limite-3:
+                    menu=2
+                elif select == limite-1:
+                    pygame.quit()
+                    quit()
 
+        limite = limite + save_variavel
         loopgeral()
 
-    global vol_music
-    select=0
 
     while menu ==2:
 
+        global vol_music
+        select=0
         liststart = limite+1
         limite2=1
         in_opt=False
 
         select = select_ud(select, limite2+1)
+        print(select)
 
         # eu não sei como isso tá funcionando mas 
         # PELO AMOR DE DEUS NÃO MEXE
@@ -176,9 +189,10 @@ def menu1():
 
 
         key = pygame.key.get_pressed()
-        if key[pygame.K_KP_ENTER] or key[pygame.KSCAN_KP_ENTER] or key[pygame.K_SPACE] or key[pygame.K_RETURN] or key[pygame.KSCAN_RETURN] == True:
-            if select == limite2:
-                menu=1
+        for tecla in teclas_confirmar:
+            if key[tecla]:
+                if select == limite2:
+                    menu=1
                     
                     
                     
@@ -192,7 +206,7 @@ def draw_text(text, font, text_col, x, y):
     img = font.render(text[:-1], True, text_col)
     screen.blit(img, (x, y))
 
-    pygame.draw.rect(screen, (255, 0, 0), (0, y, screen.get_width(), 2))
+    #pygame.draw.rect(screen, (255, 0, 0), (0, y, screen.get_width(), 2))
     #print(text_col)
 
 def sair():
@@ -250,10 +264,23 @@ def loopgeral():
     
     sair()
     pygame.display.update()
-    clock.tick(30)
+    #clock.tick(30)
     screen.fill((0, 0, 0))
 
 
+
+filename = 'save'
+
+try:
+    with open(filename, 'r') as f:
+        tem_save = True
+        f.close()
+except:
+        tem_save = False
+
+teclas_confirmar = (pygame.K_KP_ENTER, pygame.KSCAN_KP_ENTER, pygame.K_SPACE, pygame.K_RETURN, pygame.KSCAN_RETURN)
+teclas_cima = (pygame.K_UP, pygame.K_w)
+teclas_baixo = (pygame.K_DOWN, pygame.K_s)
 
 
 

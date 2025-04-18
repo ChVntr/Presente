@@ -1,37 +1,6 @@
-import pygame
+# espera... é tudo função?
+# sempre foi...
 
-pygame.init()
-
-
-
-
-
-clock = pygame.time.Clock()
-
-
-screen_w=1600
-screen_h=900
-
-fontsize = int(screen_h / 25)
-fonte = 'font/Vipnagorgialla Rg.otf'
-font = pygame.font.Font(fonte, fontsize)
-
-screen = pygame.display.set_mode((screen_w, screen_h), pygame.RESIZABLE)
-sw = (screen.get_width() / 15)
-sh = (screen.get_height() / 4)
-resfluid=True
-
-andamento=0
-
-hold_lr=0
-hold_ud=0
-
-idioma=('strings/strings-pt-br')
-istringi=(open(idioma).readlines())
-
-msc_mainmenu = pygame.mixer_music.load('soundtrack/atelier.mp3')
-vol_music=0
-volume_multiplier=20
 
 
 
@@ -152,11 +121,11 @@ def menu1():
         limite = limite + save_variavel
         loopgeral()
 
-
+    select=0
     while menu ==2:
 
         global vol_music
-        select=0
+        
         liststart = limite+1
         limite2=1
         in_opt=False
@@ -264,10 +233,52 @@ def loopgeral():
     
     sair()
     pygame.display.update()
-    #clock.tick(30)
+    #clock.tick(), print(clock.get_fps())
     screen.fill((0, 0, 0))
 
 
+
+
+
+# unica importação sem imposto
+import pygame
+
+
+
+
+
+# inicialização do pygame 
+pygame.init()
+clock = pygame.time.Clock()
+
+
+
+
+# cacetada de variavel
+
+screen_w=1600
+screen_h=900
+
+fontsize = int(screen_h / 25)
+fonte = 'font/Vipnagorgialla Rg.otf'
+font = pygame.font.Font(fonte, fontsize)
+
+screen = pygame.display.set_mode((screen_w, screen_h), pygame.RESIZABLE)
+sw = (screen.get_width() / 15)
+sh = (screen.get_height() / 4)
+resfluid=True
+
+andamento=0
+
+hold_lr=0
+hold_ud=0
+
+idioma=('strings/strings-pt-br')
+istringi=(open(idioma).readlines())
+
+msc_mainmenu = pygame.mixer_music.load('soundtrack/atelier.mp3')
+vol_music=0
+volume_multiplier=20
 
 filename = 'save'
 
@@ -285,6 +296,8 @@ teclas_baixo = (pygame.K_DOWN, pygame.K_s)
 
 
 
+
+# loop principal do jogo
 while True:
     praondeagora(andamento)
     loopgeral()

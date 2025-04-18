@@ -8,7 +8,6 @@ pygame.init()
 
 clock = pygame.time.Clock()
 
-run = True
 
 screen_w=1600
 screen_h=900
@@ -31,7 +30,7 @@ idioma=('strings/strings-pt-br')
 istringi=(open(idioma).readlines())
 
 msc_mainmenu = pygame.mixer_music.load('soundtrack/atelier.mp3')
-vol_music=15
+vol_music=0
 volume_multiplier=20
 
 
@@ -147,7 +146,7 @@ def menu1():
     while menu ==2:
 
         liststart = limite+1
-        limite2=2
+        limite2=1
         in_opt=False
 
         select = select_ud(select, limite2+1)
@@ -156,11 +155,13 @@ def menu1():
         # PELO AMOR DE DEUS NÃO MEXE
         for opt in range(0, limite2):
             draw_text(istringi[opt+liststart], font, check_sl(select, opt), sw, sh+(fontsize*opt*1.40))
-            if opt == 1: pygame.draw.rect(screen, (255, 255, 255), ((screen.get_width() / 2), sh+(fontsize*opt*1.75), fontsize*vol_music/2, fontsize/2))
+            if opt == 0:
+                pygame.draw.rect(screen, check_sl(select, opt), ((screen.get_width() / 2), sh+(fontsize*opt)+(fontsize*0.3), fontsize*vol_music/2, fontsize/2))
+            #print(fontsize)
 
         draw_text(istringi[liststart+limite2], font, check_sl(select, limite2), sw, sh+((fontsize*limite2)+(3*fontsize)))
 
-        if select == 1:
+        if select == 0:
 
             vol_music = select_lr(vol_music, volume_multiplier)
             pygame.mixer.music.set_volume(float(vol_music/volume_multiplier))
@@ -183,8 +184,11 @@ def menu1():
         loopgeral()
   
 def draw_text(text, font, text_col, x, y):
-  img = font.render(text[:-1], True, text_col)
-  screen.blit(img, (x, y))
+    img = font.render(text[:-1], True, text_col)
+    screen.blit(img, (x, y))
+
+    #pygame.draw.rect(screen, (255, 0, 0), (0, y, screen.get_width(), 2))
+    #print(text_col)
 
 def sair():
 
@@ -225,6 +229,8 @@ def loopgeral():
     global sh
     global resfluid
     global font
+    global fontsize
+    
 
     if resfluid==True:
         sw = (screen.get_width() / 15)
@@ -234,7 +240,7 @@ def loopgeral():
         font = pygame.font.Font(fonte, fontsize)
     
 
-    print(pygame.mixer.music.get_volume())
+    #print(pygame.mixer.music.get_volume())
 
     
     sair()
@@ -247,7 +253,7 @@ def loopgeral():
 
 
 
-while run:
+while True:
     praondeagora(andamento)
     loopgeral()
 

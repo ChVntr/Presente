@@ -27,13 +27,13 @@ def loop_geral():
         
     pygame.display.update()
     clock.tick()
-    input_buffer()
     sair()
+    event_buffer()
     screen.fill((0, 0, 0))
 
 def sair():
 
-    for event in pygame.event.get():
+    for event in event_buffer_get(hold=True):
         print(event)
         if event.type == pygame.QUIT:            
             pygame.quit()
@@ -72,21 +72,23 @@ def criar_save():
 
         draw_text(texto[0], posicao_do_texto[0], posicao_do_texto[1])
 
-        for event in input_buffer_get():
+        for event in event_buffer_get():
+            if event.type == pygame.KEYDOWN:
                 if event.key in teclas_confirmar:
                     print('deu enter')
                 elif event.key == pygame.K_BACKSPACE:
                     text = text[:-1]
-                else:
-                    text += event.unicode
-                    linha_digitação = True
-                    start = time.perf_counter()
+            elif event.type == pygame.TEXTINPUT:
+                text += event.text
+                linha_digitação = True
+                start = time.perf_counter()
                 
-        if linha_digitação: text += '|'
+        text_2 = text
 
-        draw_text(text, posicao_do_texto[0], posicao_do_texto[1] + fonte_tamanho, menos_um=False)
+        if linha_digitação: text_2 += '|'
 
-        if linha_digitação: text = text[:-1]
+        draw_text(text_2, posicao_do_texto[0], posicao_do_texto[1] + fonte_tamanho, menos_um=False)
+
 
 
         if time.perf_counter() - start >= 1.0:
@@ -113,24 +115,23 @@ def fonte_padrao():
     
     return fonte
 
-def input_buffer():
+def event_buffer():
     
-    global in_buffer
+    global ev_buffer
 
     for event in pygame.event.get():
-        if event.type == pygame.KEYDOWN:
-            in_buffer.append(event)
+        ev_buffer.append(event)
 
-    return in_buffer
+    return ev_buffer
 
-def input_buffer_get(hold = None):
+def event_buffer_get(hold = None):
 
-    global in_buffer
+    global ev_buffer
 
-    retornar = input_buffer()
+    retornar = event_buffer()
 
     if hold != True:
-        in_buffer = list()
+        ev_buffer = list()
 
     return retornar
     
@@ -158,7 +159,7 @@ texto = (open(texto).readlines())
 
 
 #umas variaveis globais
-in_buffer = list()
+ev_buffer = list()
 
 
 

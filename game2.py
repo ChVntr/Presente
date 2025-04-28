@@ -5,6 +5,7 @@
 
 #imports
 import pygame
+import time
 
 
 
@@ -61,7 +62,11 @@ def criar_save():
         f.close
 
     text = ''
+    linha_digitação = True
+    start = time.perf_counter()
     while True:
+
+        fonte_tamanho = fonte_padrao().get_height()
 
         posicao_do_texto = (screen.get_width()/4, screen.get_height()/3)
 
@@ -74,11 +79,19 @@ def criar_save():
                     text = text[:-1]
                 else:
                     text += event.unicode
+                    linha_digitação = True
+                    start = time.perf_counter()
                 
-        draw_text(text, posicao_do_texto[0], posicao_do_texto[1] + fonte_padrao().get_height(), menos_um=False)
-                    
+        if linha_digitação: text += '|'
+
+        draw_text(text, posicao_do_texto[0], posicao_do_texto[1] + fonte_tamanho, menos_um=False)
+
+        if linha_digitação: text = text[:-1]
 
 
+        if time.perf_counter() - start >= 1.0:
+            linha_digitação = not linha_digitação
+            start = time.perf_counter()
 
 
         loop_geral()
@@ -110,13 +123,14 @@ def input_buffer():
 
     return in_buffer
 
-def input_buffer_get():
+def input_buffer_get(hold = None):
 
     global in_buffer
 
     retornar = input_buffer()
 
-    in_buffer = list()
+    if hold != True:
+        in_buffer = list()
 
     return retornar
     

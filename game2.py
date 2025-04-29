@@ -152,11 +152,31 @@ def level_001():
     chao_x = 300
     chao_y = 600
 
-    chao = ground(chao_x, chao_y)
-    for repet in range(1, 15):
-        ground((chao_x + repet * chao.rect.width), chao_y)
+    eu_x = 400
+    eu_y = 500
+    mov_e = False
+    mov_d = False
 
-    eu = player(400, 500)
+
+    while True:
+
+        chao = ground(chao_x, chao_y)
+        for repet in range(1, 15):
+            ground((chao_x + repet * chao.rect.width), chao_y)
+
+        eu = player(eu_x, eu_y)
+        eu.movimento(mov_e, mov_d)
+        eu.render()
+
+        eu_x = eu.rect.x+32
+        eu_y = eu.rect.y+32
+
+        mov_e = eu.movimento_esquerda
+        mov_d = eu.movimento_direita
+
+        #print(eu.movimento_direita, eu.movimento_esquerda)
+
+        loop_geral()
 
 
 
@@ -170,19 +190,54 @@ class ground(pygame.sprite.Sprite):
         screen.blit(self.sprite, self.rect)
     
 class player(pygame.sprite.Sprite):
-    def __init__(self, x, y, velocidade):
+    def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
-        self.velocidade = velocidade
         self.sprite = pygame.image.load('sprites/place-holder_Sara.png')
         self.rect = self.sprite.get_rect()
         self.rect.center = (x, y)
-        screen.blit(self.sprite, self.rect)
         
+    def movimento(self, movimento_esquerda, movimento_direita):
+
+        self.movimento_esquerda = movimento_esquerda
+        self.movimento_direita = movimento_direita
+
+        for event in event_buffer_get():
+            if event.type == pygame.KEYDOWN:
+                if event.key in teclas_esquerda:
+                    self.movimento_esquerda = True
+                if event.key in teclas_direita:
+                    self.movimento_direita = True
+            elif event.type == pygame.KEYUP:
+                if event.key in teclas_esquerda:
+                    self.movimento_esquerda = False
+                if event.key in teclas_direita:
+                    self.movimento_direita = False
+
+        self.velocidade = 2
+
+        delta_x = 0
+        delta_y = 0
+
+        if self.movimento_esquerda:
+            delta_x = -self.velocidade 
+        if self.movimento_direita:
+            delta_x = self.velocidade 
+
+        self.rect.x += delta_x
+        self.rect.y += delta_y
+
+    def render(self):
+        screen.blit(self.sprite, self.rect)
+
+
 
 #agrupamentos de teclas
 teclas_confirmar = (pygame.K_KP_ENTER, pygame.KSCAN_KP_ENTER, pygame.K_RETURN, pygame.KSCAN_RETURN)
 teclas_cima = (pygame.K_UP, pygame.K_w)
 teclas_baixo = (pygame.K_DOWN, pygame.K_s)
+teclas_esquerda = (pygame.K_LEFT, pygame.K_a)
+teclas_direita = (pygame.K_RIGHT, pygame.K_d)
+
 
 
 

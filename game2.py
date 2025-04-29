@@ -26,7 +26,7 @@ def save_existe():
 def loop_geral():
         
     pygame.display.update()
-    clock.tick()
+    clock.tick(90)
     sair()
     event_buffer()
     screen.fill((0, 0, 0))
@@ -48,6 +48,8 @@ def guia_de_cenas(cena):
                 if data[0] == '00' or data[0] == '':
                     f.close()
                     return 1
+                elif data[1] == '00':
+                    return 2
         else:
             return 1
     elif cena == 1:
@@ -106,7 +108,7 @@ def criar_save():
         if quebra: break
 
     with open('save', 'w') as f:
-        f.writelines(text,)
+        f.writelines([text, '\n00'])
         f.close()
 
 def draw_text(texto, x, y, fonte = None, cor_do_texto = None, menos_um = None):
@@ -132,6 +134,8 @@ def event_buffer():
 
     for event in pygame.event.get():
         ev_buffer.append(event)
+        #if event.type == pygame.KEYDOWN:
+        #    print(event)
 
     #print(event)
     return ev_buffer
@@ -156,7 +160,9 @@ def level_001():
     eu_y = 500
     mov_e = False
     mov_d = False
-
+    vel_x = 2
+    vel_y = 0
+    flip_player_sprite = False
 
     while True:
 
@@ -165,7 +171,10 @@ def level_001():
             ground((chao_x + repet * chao.rect.width), chao_y)
 
         eu = player(eu_x, eu_y)
-        eu.movimento(mov_e, mov_d)
+        eu.movimento(mov_e, mov_d, vel_x, vel_y)
+
+        eu.sprite_process(flip_player_sprite)
+        flip_player_sprite = eu.flip
         eu.render()
 
         eu_x = eu.rect.x+32
@@ -173,8 +182,6 @@ def level_001():
 
         mov_e = eu.movimento_esquerda
         mov_d = eu.movimento_direita
-
-        #print(eu.movimento_direita, eu.movimento_esquerda)
 
         loop_geral()
 
@@ -196,10 +203,17 @@ class player(pygame.sprite.Sprite):
         self.rect = self.sprite.get_rect()
         self.rect.center = (x, y)
         
-    def movimento(self, movimento_esquerda, movimento_direita):
+    def movimento(self, movimento_esquerda, movimento_direita, vel_x, vel_y):
 
         self.movimento_esquerda = movimento_esquerda
         self.movimento_direita = movimento_direita
+
+        self.vel_x = vel_x
+        self.vel_y = vel_y
+        self.jump = False
+
+        delta_x = 0
+        delta_y = 0
 
         for event in event_buffer_get():
             if event.type == pygame.KEYDOWN:
@@ -207,27 +221,34 @@ class player(pygame.sprite.Sprite):
                     self.movimento_esquerda = True
                 if event.key in teclas_direita:
                     self.movimento_direita = True
+                if event.unicode == 'z':
+                    self.jump = True
             elif event.type == pygame.KEYUP:
                 if event.key in teclas_esquerda:
                     self.movimento_esquerda = False
                 if event.key in teclas_direita:
                     self.movimento_direita = False
 
-        self.velocidade = 2
-
-        delta_x = 0
-        delta_y = 0
-
         if self.movimento_esquerda:
-            delta_x = -self.velocidade 
-        if self.movimento_direita:
-            delta_x = self.velocidade 
+            delta_x = -self.vel_x 
+            self.flip = True
+        elif self.movimento_direita:
+            delta_x = self.vel_x 
 
         self.rect.x += delta_x
         self.rect.y += delta_y
 
+    def sprite_process(self, flip):
+
+        if self.movimento_esquerda:
+            self.flip = True
+        elif self.movimento_direita:
+            self.flip = False
+        else:
+            self.flip = flip
+
     def render(self):
-        screen.blit(self.sprite, self.rect)
+        screen.blit(pygame.transform.flip(self.sprite, self.flip, False), self.rect)
 
 
 

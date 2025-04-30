@@ -199,7 +199,7 @@ class ground(pygame.sprite.Sprite):
 class player(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
-        self.sprite = pygame.image.load('sprites/place-holder_Sara.png')
+        self.sprite = pygame.image.load('sprites/player.png')
         self.rect = self.sprite.get_rect()
         self.rect.center = (x, y)
         

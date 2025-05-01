@@ -155,9 +155,10 @@ def level_001():
 
     chao_x = 300
     chao_y = 600
+    textura = 'tile_wood_1'
 
     eu_x = 400
-    eu_y = 500
+    eu_y = chao_y + 1 - ground(chao_x, chao_y, textura).rect.height
     mov_e = False
     mov_d = False
     vel_x = 2
@@ -166,9 +167,8 @@ def level_001():
 
     while True:
 
-        chao = ground(chao_x, chao_y)
-        for repet in range(1, 15):
-            ground((chao_x + repet * chao.rect.width), chao_y)
+        chao = ground(chao_x, chao_y, textura)
+        chao.repetir(15, 2)
 
         eu = player(eu_x, eu_y)
         eu.movimento(mov_e, mov_d, vel_x, vel_y)
@@ -189,13 +189,27 @@ def level_001():
 
 #classes (ainda não sei o que tô fazendo)
 class ground(pygame.sprite.Sprite):
-    def __init__(self, x, y):
+    def __init__(self, x, y, textura):
         pygame.sprite.Sprite.__init__(self)
-        self.sprite = pygame.image.load('sprites/place-holder_chao_armored-armadillo.png')
+        self.x = x
+        self.y = y
+        self.textura = textura
+        self.sprite = pygame.image.load(f'sprites/{textura}.png')
         self.rect = self.sprite.get_rect()
         self.rect.center = (x, y)
         screen.blit(self.sprite, self.rect)
-    
+
+    def repetir(self, quantidade_x, quantidade_y):
+        self.quantidade_x = quantidade_x
+        self.quantidade_y = quantidade_y
+
+        chao = list()
+
+        for vezes in range(quantidade_x):
+            chao.append(ground((self.x + vezes * self.rect.width), self.y, self.textura))
+            for vezes_y in range(quantidade_y):
+                chao.append(ground((self.x + vezes * self.rect.width), (self.y + vezes_y * self.rect.height), self.textura))
+  
 class player(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)

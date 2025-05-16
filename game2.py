@@ -26,7 +26,7 @@ def save_existe():
 def loop_geral():
     
     pygame.display.update()
-    clock.tick(30)
+    clock.tick(90)
     event_buffer()
     sair()
     screen.fill((0, 0, 0))
@@ -137,7 +137,7 @@ def event_buffer():
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
             ev_buffer.append(event)
-            print(event)
+            #print(event)
 
 
     return ev_buffer
@@ -162,6 +162,7 @@ def level_001():
     vel_x = 4
     vel_y = 0
     flip_player_sprite = False
+    pulando = False
 
     while True:
 
@@ -172,7 +173,7 @@ def level_001():
         chao.linha_vermelha()
 
         eu = player(eu_x, eu_y)
-        eu.movimento(mov_e, mov_d, vel_x, vel_y)
+        eu.movimento(mov_e, mov_d, vel_x, vel_y, pulando)
         for chao in chao_lista:
             eu.check_colid_chao(chao.rect)
 
@@ -188,9 +189,9 @@ def level_001():
         eu_x = eu.rect.x+(32*eu.escala)
         eu_y = eu.rect.y+(32*eu.escala)
         vel_y = eu.vel_y
-
         mov_e = eu.movimento_esquerda
         mov_d = eu.movimento_direita
+        pulando = eu.jump
 
         loop_geral()
 
@@ -243,7 +244,7 @@ class player(pygame.sprite.Sprite):
         self.rect = self.sprite.get_rect()
         self.rect.center = (x, y)
         
-    def movimento(self, movimento_esquerda, movimento_direita, vel_x, vel_y):
+    def movimento(self, movimento_esquerda, movimento_direita, vel_x, vel_y, pulando):
 
         self.movimento_esquerda = movimento_esquerda
         self.movimento_direita = movimento_direita
@@ -251,19 +252,19 @@ class player(pygame.sprite.Sprite):
         self.vel_x = vel_x
         self.vel_y = vel_y
         self.vel_terminal = 15
-        self.jump = False
+        self.jump = pulando
 
         delta_x = 0
         delta_y = 0
 
-        for event in event_buffer_get():
+        for event in event_buffer_get(hold=True):
             if event.type == pygame.KEYDOWN:
                 if event.key in teclas_esquerda:
                     self.movimento_esquerda = True
                 if event.key in teclas_direita:
                     self.movimento_direita = True
-                if event.unicode == 'z':
-                    self.jump = True
+                if event.unicode == 'z' and self.jump == False:
+                    self.jump = time.perf_counter()
             elif event.type == pygame.KEYUP:
                 if event.key in teclas_esquerda:
                     self.movimento_esquerda = False
@@ -276,8 +277,20 @@ class player(pygame.sprite.Sprite):
         elif self.movimento_direita:
             delta_x = self.vel_x 
 
-        if self.jump: self.vel_y -= 20
-        self.vel_y += 1
+        if self.jump != False:
+
+            if time.perf_counter() - self.jump < 0.3:
+                self.vel_y = -6
+
+                for event in event_buffer_get():
+                    if event.type == pygame.KEYUP:
+                        if event.unicode == 'z':
+                            self.jump = True
+                            print('parei de pular')
+
+        event_buffer_get()
+
+        self.vel_y += 0.4
         if self.vel_y > self.vel_terminal: self.vel_y = self.vel_terminal
 
         delta_y = self.vel_y
@@ -335,13 +348,13 @@ class player(pygame.sprite.Sprite):
             if y_dif < 0: temp_y_dif = y_dif*-1
             if x_dif < 0: temp_x_dif = x_dif*-1
 
-            if temp_y_dif < temp_x_dif+2: 
+            if temp_y_dif < temp_x_dif -4: 
                 self.rect.y += y_dif
                 self.vel_y = 0
+                if y_dif < 0: self.jump = False
             else: 
                 self.rect.x += (x_dif)*-1
         
-        #self.rect.y = chao_rect.top - self.rect.height
             
                 
 

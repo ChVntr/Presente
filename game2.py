@@ -26,7 +26,7 @@ def save_existe():
 def loop_geral():
     
     pygame.display.update()
-    clock.tick(90)
+    clock.tick(30)
     event_buffer()
     sair()
     screen.fill((0, 0, 0))
@@ -167,7 +167,7 @@ def level_001():
 
         chao_lista = list()
 
-        chao = ground(200, 1000, 600)
+        chao = plataforma(200, 1000, 600, 650)
         chao_lista.append(chao)
         chao.linha_vermelha()
 
@@ -216,17 +216,21 @@ def sair_com_esc():
 
 
 #classes (ainda não sei o que tô fazendo)
-class ground(pygame.sprite.Sprite):
-    def __init__(self, x0, xf, y):
+class plataforma(pygame.sprite.Sprite):
+    def __init__(self, x0, xf, y0, yf):
         pygame.sprite.Sprite.__init__(self)
         self.x0 = x0
         self.xf = xf
-        self.y = y
-        self.rect = pygame.Rect(self.x0, self.y, (self.xf - self.x0), 1)
+        self.y0 = y0
+        self.yf = yf
+        self.rect = pygame.Rect(x0, y0, (xf - x0), (yf - y0))
 
     def linha_vermelha(self):
         cor = (255, 0 ,0)
-        pygame.draw.rect(screen, cor, self.rect)
+        pygame.draw.rect(screen, cor, pygame.Rect(self.rect.left, self.rect.top, self.rect.width, 1))
+        pygame.draw.rect(screen, cor, pygame.Rect(self.rect.left, self.rect.bottom, self.rect.width, 1))
+        pygame.draw.rect(screen, cor, pygame.Rect(self.rect.left, self.rect.top, 1, self.rect.height))
+        pygame.draw.rect(screen, cor, pygame.Rect(self.rect.right, self.rect.top, 1, self.rect.height))
   
 class player(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -246,7 +250,7 @@ class player(pygame.sprite.Sprite):
 
         self.vel_x = vel_x
         self.vel_y = vel_y
-        self.vel_terminal = 10
+        self.vel_terminal = 15
         self.jump = False
 
         delta_x = 0
@@ -272,7 +276,7 @@ class player(pygame.sprite.Sprite):
         elif self.movimento_direita:
             delta_x = self.vel_x 
 
-        if self.jump: self.vel_y -= self.vel_terminal*2
+        if self.jump: self.vel_y -= 20
         self.vel_y += 1
         if self.vel_y > self.vel_terminal: self.vel_y = self.vel_terminal
 
@@ -296,10 +300,48 @@ class player(pygame.sprite.Sprite):
         screen.blit(pygame.transform.flip(self.sprite, self.flip, False), self.rect)
 
     def check_colid_chao(self, chao_rect):
-        self.no_chao = False
-        variacao = self.rect.width/3
-        if self.rect.right - variacao > chao_rect.left and self.rect.left + variacao < chao_rect.right and self.rect.bottom > chao_rect.top:
-            self.rect.y = chao_rect.top - self.rect.height
+        after_left = False
+        before_right = False
+        below_top = False
+        above_bottom = False
+
+        mesmo_x = False
+        mesmo_y = False
+
+        variacao = int(self.rect.width/3)
+
+        if self.rect.right - variacao > chao_rect.left: after_left = True
+        if self.rect.left + variacao < chao_rect.right: before_right = True
+        if self.rect.bottom > chao_rect.top: below_top = True
+        if self.rect.top < chao_rect.bottom: above_bottom = True
+
+        if before_right and after_left: mesmo_y = True
+        elif not before_right and not after_left: mesmo_y = True
+        if below_top and above_bottom: mesmo_x = True
+        elif not below_top and not above_bottom: mesmo_x = True
+
+        if mesmo_x and mesmo_y:
+            if chao_rect.bottom - self.rect.top < self.rect.bottom - chao_rect.top:
+                y_dif = chao_rect.bottom - self.rect.top 
+            else: y_dif = (self.rect.bottom - chao_rect.top)*-1
+            
+            if self.rect.right - chao_rect.left < chao_rect.right - self.rect.left:
+                x_dif = self.rect.right - chao_rect.left - variacao
+            else: x_dif = (chao_rect.right - self.rect.left)*-1 + variacao
+
+            temp_y_dif = y_dif
+            temp_x_dif = x_dif
+
+            if y_dif < 0: temp_y_dif = y_dif*-1
+            if x_dif < 0: temp_x_dif = x_dif*-1
+
+            if temp_y_dif < temp_x_dif+2: 
+                self.rect.y += y_dif
+                self.vel_y = 0
+            else: 
+                self.rect.x += (x_dif)*-1
+        
+        #self.rect.y = chao_rect.top - self.rect.height
             
                 
 

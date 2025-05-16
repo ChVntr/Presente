@@ -163,7 +163,7 @@ def level_001():
     eu_y = chao_y + 1 - ground(chao_x, chao_y, textura).rect.height
     mov_e = False
     mov_d = False
-    vel_x = 2
+    vel_x = 4
     vel_y = 0
     flip_player_sprite = False
 
@@ -179,8 +179,9 @@ def level_001():
         flip_player_sprite = eu.flip
         eu.render()
 
-        eu_x = eu.rect.x+32
-        eu_y = eu.rect.y+32
+        eu_x = eu.rect.x+(32*eu.escala)
+        eu_y = eu.rect.y+(32*eu.escala)
+        vel_y = eu.vel_y
 
         mov_e = eu.movimento_esquerda
         mov_d = eu.movimento_direita
@@ -197,7 +198,7 @@ def sair_com_esc():
                 if event.key == pygame.K_ESCAPE:
                     saindo = time.perf_counter()
     else:
-        print(time.perf_counter() - saindo)
+        print(str(time.perf_counter() - saindo)[:4])
         if (time.perf_counter() - saindo) > 2.0: quit()
         for event in event_buffer_get(hold=True):
             if event.type == pygame.KEYUP:
@@ -233,8 +234,12 @@ class ground(pygame.sprite.Sprite):
   
 class player(pygame.sprite.Sprite):
     def __init__(self, x, y):
+
+        self.escala = 2
+
         pygame.sprite.Sprite.__init__(self)
         self.sprite = pygame.image.load('sprites/player.png')
+        self.sprite = pygame.transform.scale(self.sprite, (int(self.sprite.get_width() * self.escala), int(self.sprite.get_height() * self.escala)))
         self.rect = self.sprite.get_rect()
         self.rect.center = (x, y)
         
@@ -245,6 +250,7 @@ class player(pygame.sprite.Sprite):
 
         self.vel_x = vel_x
         self.vel_y = vel_y
+        self.vel_terminal = 10
         self.jump = False
 
         delta_x = 0
@@ -270,8 +276,16 @@ class player(pygame.sprite.Sprite):
         elif self.movimento_direita:
             delta_x = self.vel_x 
 
+        if self.jump: self.vel_y -= self.vel_terminal*2
+        self.vel_y += 1
+        if self.vel_y > self.vel_terminal: self.vel_y = self.vel_terminal
+
+        delta_y = self.vel_y
+
         self.rect.x += delta_x
         self.rect.y += delta_y
+
+        print(self.rect.x)
 
     def sprite_process(self, flip):
 
@@ -289,10 +303,10 @@ class player(pygame.sprite.Sprite):
 
 #agrupamentos de teclas
 teclas_confirmar = (pygame.K_KP_ENTER, pygame.KSCAN_KP_ENTER, pygame.K_RETURN, pygame.KSCAN_RETURN)
-teclas_cima = (pygame.K_UP, pygame.K_w)
-teclas_baixo = (pygame.K_DOWN, pygame.K_s)
-teclas_esquerda = (pygame.K_LEFT, pygame.K_a)
-teclas_direita = (pygame.K_RIGHT, pygame.K_d)
+teclas_cima = (pygame.K_UP,)
+teclas_baixo = (pygame.K_DOWN,)
+teclas_esquerda = (pygame.K_LEFT,)
+teclas_direita = (pygame.K_RIGHT,)
 
 
 

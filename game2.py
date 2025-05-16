@@ -24,16 +24,18 @@ def save_existe():
     return tem_save
 
 def loop_geral():
-        
+    
     pygame.display.update()
     clock.tick(90)
-    sair()
     event_buffer()
+    sair()
     screen.fill((0, 0, 0))
-
+    
 def sair():
 
-    for event in event_buffer_get(hold=True):
+    sair_com_esc()
+
+    for event in pygame.event.get():
         if event.type == pygame.QUIT:            
             pygame.quit()
             quit()
@@ -133,11 +135,11 @@ def event_buffer():
     global ev_buffer
 
     for event in pygame.event.get():
-        ev_buffer.append(event)
-        #if event.type == pygame.KEYDOWN:
-        #    print(event)
+        if event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
+            ev_buffer.append(event)
+            print(event)
 
-    #print(event)
+
     return ev_buffer
 
 def event_buffer_get(hold = None):
@@ -185,6 +187,25 @@ def level_001():
 
         loop_geral()
 
+def sair_com_esc():
+
+    global saindo
+
+    if saindo == False:
+        for event in event_buffer_get(hold=True):
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    saindo = time.perf_counter()
+    else:
+        print(time.perf_counter() - saindo)
+        if (time.perf_counter() - saindo) > 2.0: quit()
+        for event in event_buffer_get(hold=True):
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_ESCAPE:
+                    saindo = False
+                    print('cancelado')
+
+    
 
 
 #classes (ainda não sei o que tô fazendo)
@@ -291,6 +312,7 @@ texto = (open(texto).readlines())
 
 #umas variaveis globais
 ev_buffer = list()
+saindo = False
 
 
 

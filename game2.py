@@ -155,12 +155,8 @@ def event_buffer_get(hold = None):
     
 def level_001():
 
-    chao_x = 300
-    chao_y = 600
-    textura = 'tile_wood_1'
-
     eu_x = 400
-    eu_y = chao_y + 1 - ground(chao_x, chao_y, textura).rect.height
+    eu_y = 400
     mov_e = False
     mov_d = False
     vel_x = 4
@@ -169,15 +165,25 @@ def level_001():
 
     while True:
 
-        chao = ground(chao_x, chao_y, textura)
-        chao.repetir(15, 2)
+        chao_lista = list()
+
+        chao = ground(200, 1000, 600)
+        chao_lista.append(chao)
+        chao.linha_vermelha()
 
         eu = player(eu_x, eu_y)
         eu.movimento(mov_e, mov_d, vel_x, vel_y)
+        for chao in chao_lista:
+            eu.check_colid_chao(chao.rect)
 
         eu.sprite_process(flip_player_sprite)
         flip_player_sprite = eu.flip
         eu.render()
+
+
+
+
+
 
         eu_x = eu.rect.x+(32*eu.escala)
         eu_y = eu.rect.y+(32*eu.escala)
@@ -211,26 +217,16 @@ def sair_com_esc():
 
 #classes (ainda não sei o que tô fazendo)
 class ground(pygame.sprite.Sprite):
-    def __init__(self, x, y, textura):
+    def __init__(self, x0, xf, y):
         pygame.sprite.Sprite.__init__(self)
-        self.x = x
+        self.x0 = x0
+        self.xf = xf
         self.y = y
-        self.textura = textura
-        self.sprite = pygame.image.load(f'sprites/{textura}.png')
-        self.rect = self.sprite.get_rect()
-        self.rect.center = (x, y)
-        screen.blit(self.sprite, self.rect)
+        self.rect = pygame.Rect(self.x0, self.y, (self.xf - self.x0), 1)
 
-    def repetir(self, quantidade_x, quantidade_y):
-        self.quantidade_x = quantidade_x
-        self.quantidade_y = quantidade_y
-
-        chao = list()
-
-        for vezes in range(quantidade_x):
-            chao.append(ground((self.x + vezes * self.rect.width), self.y, self.textura))
-            for vezes_y in range(quantidade_y):
-                chao.append(ground((self.x + vezes * self.rect.width), (self.y + vezes_y * self.rect.height), self.textura))
+    def linha_vermelha(self):
+        cor = (255, 0 ,0)
+        pygame.draw.rect(screen, cor, self.rect)
   
 class player(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -285,7 +281,7 @@ class player(pygame.sprite.Sprite):
         self.rect.x += delta_x
         self.rect.y += delta_y
 
-        print(self.rect.x)
+        #print(self.rect.x)
 
     def sprite_process(self, flip):
 
@@ -298,6 +294,14 @@ class player(pygame.sprite.Sprite):
 
     def render(self):
         screen.blit(pygame.transform.flip(self.sprite, self.flip, False), self.rect)
+
+    def check_colid_chao(self, chao_rect):
+        self.no_chao = False
+        variacao = self.rect.width/3
+        if self.rect.right - variacao > chao_rect.left and self.rect.left + variacao < chao_rect.right and self.rect.bottom > chao_rect.top:
+            self.rect.y = chao_rect.top - self.rect.height
+            
+                
 
 
 

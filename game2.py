@@ -6,6 +6,7 @@
 #imports
 import pygame
 import time
+import os
 
 
 
@@ -135,7 +136,7 @@ def event_buffer():
     global ev_buffer
 
     for event in pygame.event.get():
-        if event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
+        if event.type == pygame.KEYDOWN or event.type == pygame.KEYUP or event.type == pygame.TEXTINPUT:
             ev_buffer.append(event)
             #print(event)
 
@@ -162,13 +163,21 @@ def level_001():
     vel_x = 4
     vel_y = 0
     flip_player_sprite = False
-    pulando = False
+
+    bg_y_list = (0, 1, 1, 1, 1)
+    bg = background('sprites/bg/snow', 2)
+    bg.load(escala_geral)
+
 
     while True:
 
+
+        pulando = True
         chao_lista = list()
 
-        chao = plataforma(200, 1000, 600, 650)
+        bg.render(bg_y_list)
+
+        chao = plataforma(-100, 10000, 870, 880)
         chao_lista.append(chao)
         chao.linha_vermelha()
 
@@ -236,7 +245,7 @@ class plataforma(pygame.sprite.Sprite):
 class player(pygame.sprite.Sprite):
     def __init__(self, x, y):
 
-        self.escala = 2
+        self.escala = escala_geral
 
         pygame.sprite.Sprite.__init__(self)
         self.sprite = pygame.image.load('sprites/player.png')
@@ -256,6 +265,8 @@ class player(pygame.sprite.Sprite):
 
         delta_x = 0
         delta_y = 0
+
+        if vel_y > 0: self.jump = True
 
         for event in event_buffer_get(hold=True):
             if event.type == pygame.KEYDOWN:
@@ -290,7 +301,7 @@ class player(pygame.sprite.Sprite):
 
         event_buffer_get()
 
-        self.vel_y += 0.4
+        self.vel_y += 0.3
         if self.vel_y > self.vel_terminal: self.vel_y = self.vel_terminal
 
         delta_y = self.vel_y
@@ -355,8 +366,39 @@ class player(pygame.sprite.Sprite):
             else: 
                 self.rect.x += (x_dif)*-1
         
-            
-                
+class background(pygame.sprite.Sprite):
+    def __init__(self, folder, repts):
+
+        self.folder = folder
+        self.layers = list()
+        self.repts = repts
+
+        for n in range (0, len(os.listdir(folder))):
+            self.layers.append(f'{folder}/{n+1}.png')
+
+    def load(self, escala):
+
+        lista = list()
+
+        for n in range(0, len(self.layers)):
+            sprite = pygame.image.load(self.layers[n]).convert_alpha()
+            sprite = pygame.transform.scale(sprite, (int(sprite.get_width() * escala), int(sprite.get_height() * escala)))
+            lista.append(sprite)
+
+        self.layers_2 = lista
+
+    def render(self, y_list):
+
+        self.y_list = y_list
+
+        for nr in range(0, self.repts):
+            for n in range(0, len(self.layers_2)):
+
+                if y_list[n] == 0: y = 0
+                else: y = screen.get_height() - self.layers_2[n].get_height()
+
+                screen.blit(self.layers_2[n], (self.layers_2[n].get_width()*nr, y))
+
 
 
 
@@ -386,7 +428,7 @@ texto = (open(texto).readlines())
 #umas variaveis globais
 ev_buffer = list()
 saindo = False
-
+escala_geral = 4
 
 
 

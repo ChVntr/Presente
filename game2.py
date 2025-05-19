@@ -26,11 +26,14 @@ def save_existe():
 
 def loop_geral():
     
-    pygame.display.update()
-    clock.tick(90)
+    #pygame.display.update()
+    clock.tick(fps)
     event_buffer()
     sair()
-    screen.fill((0, 0, 0))
+    tela.fill((0, 0, 0))
+    tela.blit(screen, (0, 0))
+    pygame.display.flip()
+    print(int(clock.get_fps()))
     
 def sair():
 
@@ -164,7 +167,7 @@ def level_001():
     vel_y = 0
     flip_player_sprite = False
 
-    bg_y_list = (0, 1, 1, 1, 1)
+    bg_y_list = (0, 1, 1)
     bg = background('sprites/bg/snow', 2)
     bg.load(escala_geral)
 
@@ -419,7 +422,15 @@ pygame.init()
 pygame.display.set_caption('Presente')
 clock = pygame.time.Clock()
 
-screen = pygame.display.set_mode((1600, 900), pygame.RESIZABLE)
+fps = 60
+
+scr_w = 1600
+scr_h = 900
+
+tela = pygame.display.set_mode((scr_w, scr_h))
+screen = pygame.Surface((scr_w, scr_h))
+scr_transparente = pygame.Surface((scr_w, scr_h), pygame.SRCALPHA)
+#screen = tela
 
 texto = ('strings/strings-pt-br')
 texto = (open(texto).readlines())

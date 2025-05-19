@@ -26,12 +26,10 @@ def save_existe():
 
 def loop_geral():
     
-    #pygame.display.update()
-    clock.tick(fps)
+    clock.tick()
     event_buffer()
     sair()
-    tela.fill((0, 0, 0))
-    tela.blit(screen, (0, 0))
+    tela.blit(screen, screen_cords)
     pygame.display.flip()
     print(int(clock.get_fps()))
     
@@ -159,6 +157,13 @@ def event_buffer_get(hold = None):
     
 def level_001():
 
+    global screen_cords
+    global screen
+
+    scr_scroll = 0
+    screen = pygame.Surface((3200, scr_h))
+    screen_cords = (scr_scroll, 0)
+
     eu_x = 400
     eu_y = 400
     mov_e = False
@@ -167,27 +172,38 @@ def level_001():
     vel_y = 0
     flip_player_sprite = False
 
-    bg_y_list = (0, 1, 1)
-    bg = background('sprites/bg/snow', 2)
+    bg_y_list = (0, 0, 0, 0, 0)
+    bg = background('sprites/bg/snow', 2, bg_y_list)
     bg.load(escala_geral)
+
+    chao = plataforma(1, 2000, 870, 880)
+    parede = plataforma(-1, 0, 860, 890)
+
+    chao_lista = list()
+    chao_lista.append(chao)
+    chao_lista.append(parede)
 
 
     while True:
 
 
         pulando = True
-        chao_lista = list()
 
-        bg.render(bg_y_list)
+        bg.render()
 
-        chao = plataforma(-100, 10000, 870, 880)
-        chao_lista.append(chao)
-        chao.linha_vermelha()
 
         eu = player(eu_x, eu_y)
-        eu.movimento(mov_e, mov_d, vel_x, vel_y, pulando)
+        delta = eu.movimento(mov_e, mov_d, vel_x, vel_y, pulando)
+
+        difs_lista = list()
         for chao in chao_lista:
-            eu.check_colid_chao(chao.rect)
+
+            difs = eu.check_colid_chao(chao.rect)
+
+            dif_x = difs[0]
+            dif_y = difs[1]
+
+            chao.linha_vermelha()
 
         eu.sprite_process(flip_player_sprite)
         flip_player_sprite = eu.flip
@@ -204,6 +220,11 @@ def level_001():
         mov_e = eu.movimento_esquerda
         mov_d = eu.movimento_direita
         pulando = eu.jump
+        delta_x = delta[0]
+        delta_y = delta[1]
+        if eu.rect.x > 500:
+            scr_scroll -= (delta_x - dif_x)
+            screen_cords = (scr_scroll, 0)
 
         loop_geral()
 
@@ -314,6 +335,8 @@ class player(pygame.sprite.Sprite):
 
         #print(self.rect.x)
 
+        return(delta_x, delta_y)
+
     def sprite_process(self, flip):
 
         if self.movimento_esquerda:
@@ -335,7 +358,10 @@ class player(pygame.sprite.Sprite):
         mesmo_x = False
         mesmo_y = False
 
-        variacao = int(self.rect.width/3)
+        x_dif = 0
+        y_dif= 0
+
+        variacao = int(self.rect.width/3.5)
 
         if self.rect.right - variacao > chao_rect.left: after_left = True
         if self.rect.left + variacao < chao_rect.right: before_right = True
@@ -366,15 +392,20 @@ class player(pygame.sprite.Sprite):
                 self.rect.y += y_dif
                 self.vel_y = 0
                 if y_dif < 0: self.jump = False
+                x_dif = 0
             else: 
                 self.rect.x += (x_dif)*-1
+                y_dif = 0
         
+        return (x_dif, y_dif)
+
 class background(pygame.sprite.Sprite):
-    def __init__(self, folder, repts):
+    def __init__(self, folder, repts, y_list):
 
         self.folder = folder
         self.layers = list()
         self.repts = repts
+        self.y_list = y_list
 
         for n in range (0, len(os.listdir(folder))):
             self.layers.append(f'{folder}/{n+1}.png')
@@ -385,20 +416,27 @@ class background(pygame.sprite.Sprite):
 
         for n in range(0, len(self.layers)):
             sprite = pygame.image.load(self.layers[n]).convert_alpha()
-            sprite = pygame.transform.scale(sprite, (int(sprite.get_width() * escala), int(sprite.get_height() * escala)))
+
+            correcao = 1
+            img_h = sprite.get_height()
+
+            if self.y_list[n] == 0 and img_h != 900:
+                correcao = 900/(img_h*escala)
+                print(correcao)
+                
+
+            sprite = pygame.transform.scale(sprite, (int(img_h * escala * correcao), int(sprite.get_height() * escala * correcao)))
             lista.append(sprite)
 
         self.layers_2 = lista
 
-    def render(self, y_list):
-
-        self.y_list = y_list
+    def render(self):
 
         for nr in range(0, self.repts):
             for n in range(0, len(self.layers_2)):
 
-                if y_list[n] == 0: y = 0
-                else: y = screen.get_height() - self.layers_2[n].get_height()
+                if self.y_list[n] == 0: y = 0
+                else: y = scr_h - self.layers_2[n].get_height()
 
                 screen.blit(self.layers_2[n], (self.layers_2[n].get_width()*nr, y))
 
@@ -429,7 +467,8 @@ scr_h = 900
 
 tela = pygame.display.set_mode((scr_w, scr_h))
 screen = pygame.Surface((scr_w, scr_h))
-scr_transparente = pygame.Surface((scr_w, scr_h), pygame.SRCALPHA)
+screen_cords = (0,0)
+#scr_transparente = pygame.Surface((scr_w, scr_h), pygame.SRCALPHA)
 #screen = tela
 
 texto = ('strings/strings-pt-br')

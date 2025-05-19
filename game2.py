@@ -1,5 +1,8 @@
 #segunda tentativa de fazer esse bagulho dar certo
-
+#IDEIAS
+# - placa com panda desenhado
+# - janela com vista de uma cutia com passaros
+# - entregar uma pedra com um laço
 
 
 
@@ -31,7 +34,7 @@ def loop_geral():
     sair()
     tela.blit(screen, screen_cords)
     pygame.display.flip()
-    print(int(clock.get_fps()))
+    #print(int(clock.get_fps()))
     
 def sair():
 
@@ -161,28 +164,29 @@ def level_001():
     global screen
 
     scr_scroll = 0
-    screen = pygame.Surface((3200, scr_h))
+    screen = pygame.Surface((2000, scr_h))
     screen_cords = (scr_scroll, 0)
 
     eu_x = 400
     eu_y = 400
     mov_e = False
     mov_d = False
-    vel_x = 4
+    vel_x = 10
     vel_y = 0
     flip_player_sprite = False
 
     bg_y_list = (0, 0, 0, 0, 0)
-    bg = background('sprites/bg/snow', 2, bg_y_list)
+    bg = background('sprites/bg/snow', 4, bg_y_list)
     bg.load(escala_geral)
 
-    chao = plataforma(1, 2000, 870, 880)
-    parede = plataforma(-1, 0, 860, 890)
+    chao = plataforma(1, 2000-1, 870, 880)
 
     chao_lista = list()
-    chao_lista.append(chao)
-    chao_lista.append(parede)
+    #chao_lista.append(chao)
 
+    chao_lista += limite(top=False)
+
+    eu = player(eu_x, eu_y)
 
     while True:
 
@@ -191,40 +195,15 @@ def level_001():
 
         bg.render()
 
+        eu.movimento()
 
-        eu = player(eu_x, eu_y)
-        delta = eu.movimento(mov_e, mov_d, vel_x, vel_y, pulando)
-
-        difs_lista = list()
         for chao in chao_lista:
+            eu.check_colid_chao(chao.rect)
+            #chao.linha_vermelha()
 
-            difs = eu.check_colid_chao(chao.rect)
-
-            dif_x = difs[0]
-            dif_y = difs[1]
-
-            chao.linha_vermelha()
-
-        eu.sprite_process(flip_player_sprite)
-        flip_player_sprite = eu.flip
+        eu.sprite_process()
         eu.render()
-
-
-
-
-
-
-        eu_x = eu.rect.x+(32*eu.escala)
-        eu_y = eu.rect.y+(32*eu.escala)
-        vel_y = eu.vel_y
-        mov_e = eu.movimento_esquerda
-        mov_d = eu.movimento_direita
-        pulando = eu.jump
-        delta_x = delta[0]
-        delta_y = delta[1]
-        if eu.rect.x > 500:
-            scr_scroll -= (delta_x - dif_x)
-            screen_cords = (scr_scroll, 0)
+        eu.scroll()
 
         loop_geral()
 
@@ -245,6 +224,22 @@ def sair_com_esc():
                 if event.key == pygame.K_ESCAPE:
                     saindo = False
                     print('cancelado')
+
+def limite(top = None, bot = None, l = None, r = None):
+
+    barreiras = list()
+
+    topo = plataforma(0, screen.get_width(), 0, 1)
+    fundo = plataforma(0, screen.get_width(), screen.get_height(), screen.get_height()+1)
+    esquerda = plataforma(0, 1, 0, screen.get_height())
+    direita = plataforma(screen.get_width(), screen.get_width()+1, 0, screen.get_height())
+
+    if top != False: barreiras.append(topo)
+    if bot != False: barreiras.append(fundo)
+    if l != False: barreiras.append(esquerda)
+    if r != False: barreiras.append(direita)
+
+    return barreiras
 
     
 
@@ -270,6 +265,15 @@ class player(pygame.sprite.Sprite):
     def __init__(self, x, y):
 
         self.escala = escala_geral
+        self.scr_scroll = 0
+        self.scr_w = screen.get_width()
+        self.flip = False
+        self.vel_y = 0
+        self.vel_x = 10
+        self.movimento_esquerda = False
+        self.movimento_direita = False
+        self.pulando = True
+        self.vel_terminal = 15
 
         pygame.sprite.Sprite.__init__(self)
         self.sprite = pygame.image.load('sprites/player.png')
@@ -277,20 +281,14 @@ class player(pygame.sprite.Sprite):
         self.rect = self.sprite.get_rect()
         self.rect.center = (x, y)
         
-    def movimento(self, movimento_esquerda, movimento_direita, vel_x, vel_y, pulando):
+    def movimento(self, hab_pulo = None):
 
-        self.movimento_esquerda = movimento_esquerda
-        self.movimento_direita = movimento_direita
-
-        self.vel_x = vel_x
-        self.vel_y = vel_y
-        self.vel_terminal = 15
-        self.jump = pulando
+        if hab_pulo != True: self.pulando = True
 
         delta_x = 0
         delta_y = 0
 
-        if vel_y > 0: self.jump = True
+        if self.vel_y > 0: self.pulando = True
 
         for event in event_buffer_get(hold=True):
             if event.type == pygame.KEYDOWN:
@@ -298,8 +296,9 @@ class player(pygame.sprite.Sprite):
                     self.movimento_esquerda = True
                 if event.key in teclas_direita:
                     self.movimento_direita = True
-                if event.unicode == 'z' and self.jump == False:
-                    self.jump = time.perf_counter()
+                if event.unicode == 'z' and self.pulando == False:
+                    self.pulando = time.perf_counter()
+                    print('pula1')
             elif event.type == pygame.KEYUP:
                 if event.key in teclas_esquerda:
                     self.movimento_esquerda = False
@@ -312,15 +311,16 @@ class player(pygame.sprite.Sprite):
         elif self.movimento_direita:
             delta_x = self.vel_x 
 
-        if self.jump != False:
+        if self.pulando != False:
 
-            if time.perf_counter() - self.jump < 0.3:
-                self.vel_y = -6
+            if time.perf_counter() - self.pulando < 2:
+                self.vel_y = -5
+                print('pula2')
 
                 for event in event_buffer_get():
                     if event.type == pygame.KEYUP:
                         if event.unicode == 'z':
-                            self.jump = True
+                            self.pulando = True
                             print('parei de pular')
 
         event_buffer_get()
@@ -335,16 +335,15 @@ class player(pygame.sprite.Sprite):
 
         #print(self.rect.x)
 
-        return(delta_x, delta_y)
+        self.delta_x = delta_x
+        self.delta_y = delta_y
 
-    def sprite_process(self, flip):
+    def sprite_process(self):
 
         if self.movimento_esquerda:
             self.flip = True
         elif self.movimento_direita:
             self.flip = False
-        else:
-            self.flip = flip
 
     def render(self):
         screen.blit(pygame.transform.flip(self.sprite, self.flip, False), self.rect)
@@ -391,13 +390,25 @@ class player(pygame.sprite.Sprite):
             if temp_y_dif < temp_x_dif -4: 
                 self.rect.y += y_dif
                 self.vel_y = 0
-                if y_dif < 0: self.jump = False
+                if y_dif < 0: self.pulando = False
                 x_dif = 0
             else: 
                 self.rect.x += (x_dif)*-1
                 y_dif = 0
         
-        return (x_dif, y_dif)
+        self.x_dif = x_dif
+        self.y_dif = y_dif
+
+    def scroll(self):
+        
+        global screen_cords
+        
+
+        threshold = 650
+
+        if self.rect.x > screen_cords[0] + threshold and self.rect.x < self.scr_w - (1600 - threshold):
+            self.scr_scroll -= (self.delta_x - self.x_dif)
+            screen_cords = (self.scr_scroll, 0)
 
 class background(pygame.sprite.Sprite):
     def __init__(self, folder, repts, y_list):
@@ -422,7 +433,7 @@ class background(pygame.sprite.Sprite):
 
             if self.y_list[n] == 0 and img_h != 900:
                 correcao = 900/(img_h*escala)
-                print(correcao)
+                #print(correcao)
                 
 
             sprite = pygame.transform.scale(sprite, (int(img_h * escala * correcao), int(sprite.get_height() * escala * correcao)))
@@ -468,8 +479,6 @@ scr_h = 900
 tela = pygame.display.set_mode((scr_w, scr_h))
 screen = pygame.Surface((scr_w, scr_h))
 screen_cords = (0,0)
-#scr_transparente = pygame.Surface((scr_w, scr_h), pygame.SRCALPHA)
-#screen = tela
 
 texto = ('strings/strings-pt-br')
 texto = (open(texto).readlines())

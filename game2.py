@@ -167,6 +167,7 @@ def level_001():
     screen = pygame.Surface((2000, scr_h))
     screen_cords = (scr_scroll, 0)
 
+    bg_paralax = (4, 2, 0)
     bg_y_list = (0, 0, 0, 0, 0)
     bg = background('sprites/bg/snow', 4, bg_y_list)
     bg.load(escala_geral)
@@ -185,7 +186,7 @@ def level_001():
 
         pulando = True
 
-        bg.render()
+        #bg.render(bg_paralax)
 
         eu.movimento()
 
@@ -261,7 +262,7 @@ class player(pygame.sprite.Sprite):
         self.scr_w = screen.get_width()
         self.flip = False
         self.vel_y = 0
-        self.vel_x = 300
+        self.vel_x = 3
         self.movimento_esquerda = False
         self.movimento_direita = False
         self.pulando = True
@@ -299,14 +300,15 @@ class player(pygame.sprite.Sprite):
                     self.movimento_direita = False
 
         if self.movimento_esquerda != False:
-            delta_x = ((time.perf_counter() - self.movimento_esquerda) * self.vel_x *-1)
+            delta_x = ((time.perf_counter() - self.movimento_esquerda) * self.vel_x *-1)*100
             self.movimento_esquerda = time.perf_counter()
             self.flip = True
         elif self.movimento_direita != False:
-            delta_x = ((time.perf_counter() - self.movimento_direita) * self.vel_x)
+            delta_x = ((time.perf_counter() - self.movimento_direita) * self.vel_x)*100
             self.movimento_direita = time.perf_counter()
         if int(delta_x) != 0:
-            print(int(delta_x))
+            delta_x = self.vel_x * round(delta_x / self.vel_x)
+            print(delta_x)
 
         if self.pulando != False:
 
@@ -438,15 +440,15 @@ class background(pygame.sprite.Sprite):
 
         self.layers_2 = lista
 
-    def render(self):
+    def render(self, paralax):
 
         for nr in range(0, self.repts):
             for n in range(0, len(self.layers_2)):
 
                 if self.y_list[n] == 0: y = 0
                 else: y = scr_h - self.layers_2[n].get_height()
-
-                screen.blit(self.layers_2[n], (self.layers_2[n].get_width()*nr, y))
+                #print(n)
+                screen.blit(self.layers_2[n], (self.layers_2[n].get_width()*nr - (paralax[n]/5 * screen_cords[0]), y))
 
 
 

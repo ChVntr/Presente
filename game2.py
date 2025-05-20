@@ -167,14 +167,6 @@ def level_001():
     screen = pygame.Surface((2000, scr_h))
     screen_cords = (scr_scroll, 0)
 
-    eu_x = 400
-    eu_y = 400
-    mov_e = False
-    mov_d = False
-    vel_x = 10
-    vel_y = 0
-    flip_player_sprite = False
-
     bg_y_list = (0, 0, 0, 0, 0)
     bg = background('sprites/bg/snow', 4, bg_y_list)
     bg.load(escala_geral)
@@ -186,7 +178,7 @@ def level_001():
 
     chao_lista += limite(top=False)
 
-    eu = player(eu_x, eu_y)
+    eu = player(400, 400)
 
     while True:
 
@@ -269,7 +261,7 @@ class player(pygame.sprite.Sprite):
         self.scr_w = screen.get_width()
         self.flip = False
         self.vel_y = 0
-        self.vel_x = 10
+        self.vel_x = 300
         self.movimento_esquerda = False
         self.movimento_direita = False
         self.pulando = True
@@ -293,29 +285,33 @@ class player(pygame.sprite.Sprite):
         for event in event_buffer_get(hold=True):
             if event.type == pygame.KEYDOWN:
                 if event.key in teclas_esquerda:
-                    self.movimento_esquerda = True
+                    self.movimento_esquerda = time.perf_counter()
                 if event.key in teclas_direita:
-                    self.movimento_direita = True
+                    self.movimento_direita = time.perf_counter()
                 if event.unicode == 'z' and self.pulando == False:
                     self.pulando = time.perf_counter()
-                    print('pula1')
             elif event.type == pygame.KEYUP:
                 if event.key in teclas_esquerda:
                     self.movimento_esquerda = False
+                    if self.movimento_direita != False:
+                        self.movimento_direita = time.perf_counter()
                 if event.key in teclas_direita:
                     self.movimento_direita = False
 
-        if self.movimento_esquerda:
-            delta_x = -self.vel_x 
+        if self.movimento_esquerda != False:
+            delta_x = ((time.perf_counter() - self.movimento_esquerda) * self.vel_x *-1)
+            self.movimento_esquerda = time.perf_counter()
             self.flip = True
-        elif self.movimento_direita:
-            delta_x = self.vel_x 
+        elif self.movimento_direita != False:
+            delta_x = ((time.perf_counter() - self.movimento_direita) * self.vel_x)
+            self.movimento_direita = time.perf_counter()
+        if int(delta_x) != 0:
+            print(int(delta_x))
 
         if self.pulando != False:
 
             if time.perf_counter() - self.pulando < 2:
                 self.vel_y = -5
-                print('pula2')
 
                 for event in event_buffer_get():
                     if event.type == pygame.KEYUP:
@@ -407,8 +403,9 @@ class player(pygame.sprite.Sprite):
         threshold = 650
 
         if self.rect.x > screen_cords[0] + threshold and self.rect.x < self.scr_w - (1600 - threshold):
-            self.scr_scroll -= (self.delta_x - self.x_dif)
+            self.scr_scroll = -(self.rect.x - threshold)
             screen_cords = (self.scr_scroll, 0)
+        #print(self.scr_scroll)
 
 class background(pygame.sprite.Sprite):
     def __init__(self, folder, repts, y_list):

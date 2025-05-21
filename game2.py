@@ -10,7 +10,7 @@
 import pygame
 import time
 import os
-
+import random
 
 
 
@@ -34,6 +34,7 @@ def loop_geral():
     sair()
     tela.blit(screen, screen_cords)
     pygame.display.flip()
+    screen.fill((0, 0, 0))
     #print(int(clock.get_fps()))
     
 def sair():
@@ -188,16 +189,17 @@ def level_001():
 
     eu = player(100, 784)
 
-    # assets
+    # assets 
 
     assets_pre = list()
-    chao = assetona(0, 0, 'sprites/chao/oak_forest.png')
+    chao = assetona(0, 0, 'sprites/chao/oak_forest.png', -1)
     chao.bot()
     assets_pre.append(chao)
     assets_pre.append( assetona(1890, 550, 'sprites/assets/panda_sign.png') )
+    #assets_pre.append(rndm_asset(0, 784, 'sprites/assets/grama_amarela', 30, 5, 10))
 
     assets_pos = list()
-    assets_pos.append(assetona(-50, 784, 'sprites/assets/grama_amarela.png'))
+    #assets_pos.append(assetona(-50, 784, 'sprites/assets/grama_amarela.png'))
     
     while True:
 
@@ -427,6 +429,7 @@ class player():
 
         if self.rect.x > screen_cords[0] + threshold and self.rect.x < self.scr_w - (1600 - threshold):
             self.scr_scroll = -(self.rect.x - threshold)
+            if self.scr_scroll > 0: self.scr_scroll = 0
             screen_cords = (self.scr_scroll, 0)
         #print(self.scr_scroll)
 
@@ -463,29 +466,100 @@ class background(pygame.sprite.Sprite):
 
     def render(self, paralax):
 
+        scr_w = screen.get_width()
+
         for nr in range(0, self.repts):
             for n in range(0, len(self.layers_2)):
 
-                if self.y_list[n] == 0: y = 0
-                else: y = scr_h - self.layers_2[n].get_height()
-                #print(n)
-                screen.blit(self.layers_2[n], (self.layers_2[n].get_width()*nr - (paralax[n]/5 * screen_cords[0]), y))
+                x = self.layers_2[n].get_width()*nr - (paralax[n]/5 * screen_cords[0]) 
+
+                if x < screen_cords[0]*-1 + 1600 and x > screen_cords[0]*-1 - 800: 
+                    if self.y_list[n] == 0: y = 0
+                    else: y = scr_h - self.layers_2[n].get_height()
+                    screen.blit(self.layers_2[n], (x, y))
 
 class assetona():
-    def __init__(self, x, y, sprite):
+    def __init__(self, x, y, sprite, repets = None, int_min = None, int_max = None):
 
         self.x = x
         self.y = y
 
+        if repets == None: repets = 1
+        if int_min == None: int_min = 0
+        if int_max == None: int_max = 0
+
+        self.repets = repets
+        self.int_min = int_min
+        self.int_max = int_max
+
         sprite = pygame.image.load(sprite)
         self.sprite = pygame.transform.scale(sprite, (int(sprite.get_width() * escala_geral), int(sprite.get_height() * escala_geral)))
+
+        self.img_w = self.sprite.get_width()
 
     def bot(self):
 
         self.y = screen.get_height() - self.sprite.get_height()
 
     def render(self):
-        screen.blit(self.sprite, (self.x, self.y))
+
+        if self.repets == -1: inf = True
+        else: inf = False
+        
+        if not inf: 
+            for n in range(0, self.repets):
+                x = self.x + self.img_w * n
+                if x < screen_cords[0]*-1 + 1600 and x > screen_cords[0]*-1 - self.img_w:
+                    screen.blit(self.sprite, (x, self.y))
+        else:
+            x = self.x * screen_cords[0] / self.img_w
+            while True:
+                if x < screen_cords[0]*-1 + 1600 and x > screen_cords[0]*-1 - self.img_w:
+                    screen.blit(self.sprite, (x, self.y))
+                    #print(x)
+                if x > screen_cords[0]*-1 + 1600: break
+                x += self.img_w
+
+class rndm_asset():
+
+    def __init__(self, x, y, folder, repets = None, int_min = None, int_max = None):
+
+        self.y = y
+
+        if repets == None: repets = 1
+        if int_min == None: int_min = 0
+        if int_max == None: int_max = 0
+
+        sprite_list = list()
+        sprite_list2 = list()
+        self.sprite_x_list = list()
+        self.sprite_order = list()
+
+        for n in range (0, len(os.listdir(folder))):
+            sprite_list.append(f'{folder}/{n+1}.png')
+
+        #print(sprite_list)
+
+        for sprite in sprite_list:
+            sprite = pygame.image.load(sprite)
+            sprite = pygame.transform.scale(sprite, (int(sprite.get_width() * escala_geral), int(sprite.get_height() * escala_geral)))
+
+            sprite_list2.append(sprite)
+        sprite_list = sprite_list2
+
+        for n in range(0, repets):
+
+            self.sprite_order.append(sprite_list[random.randrange(0, len(sprite_list))])
+            
+            if n == 0: self.sprite_x_list.append(0)
+            else: self.sprite_x_list.append(x + self.sprite_order[n].get_width() * n + random.randrange(int_min, int_max))
+
+        #print(self.sprite_x_list)
+
+    def render(self):
+
+        for n in range(0, len(self.sprite_x_list)):
+            screen.blit(self.sprite_order[n], (self.sprite_x_list[n], self.y))
 
 
 

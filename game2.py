@@ -29,7 +29,7 @@ def save_existe():
 
 def loop_geral():
     
-    clock.tick()
+    clock.tick(fps_cap)
     event_buffer()
     sair()
     tela.blit(screen, screen_cords)
@@ -160,43 +160,62 @@ def event_buffer_get(hold = None):
     
 def level_001():
 
+    # um monte de variavel da tela
+
     global screen_cords
     global screen
 
     scr_scroll = 0
-    screen = pygame.Surface((2000, scr_h))
+    screen = pygame.Surface((3200, scr_h))
     screen_cords = (scr_scroll, 0)
+
+    # variaveis do plano de fundo
 
     bg_paralax = (4, 2, 0)
     bg_y_list = (0, 0, 0, 0, 0)
-    bg = background('sprites/bg/snow', 4, bg_y_list)
-    bg.load(escala_geral)
+    bg = background('sprites/bg/oak_forest', 4, bg_y_list)
+    bg.load(96)
 
-    chao = plataforma(1, 2000-1, 870, 880)
+    # varias colisoes
 
-    chao_lista = list()
-    #chao_lista.append(chao)
+    colid_lista = list()
+    colid_lista += limite(top=False, bot=False)
 
-    chao_lista += limite(top=False)
+    chao_colid = plataforma(0, screen.get_width(), screen.get_height()-96, screen.get_height())
+    colid_lista.append(chao_colid)
+    
+    # tu
 
     eu = player(400, 400)
 
+    # assets
+
+    chao = assetona(0, 0, 'sprites/chao/oak_forest.png')
+    chao.bot()
+
+    assets_pre = list()
+    assets_pre.append(chao)
+    assets_pos = list()
+    assets_pos.append(assetona(-50, 784, 'sprites/assets/grama_amarela.png'))
+
     while True:
 
-
-        pulando = True
-
-        #bg.render(bg_paralax)
-
         eu.movimento()
+        for item in colid_lista:
+            eu.check_colid(item.rect)
+        eu.scroll()
+        bg.render(bg_paralax)
 
-        for chao in chao_lista:
-            eu.check_colid_chao(chao.rect)
-            #chao.linha_vermelha()
+        for asset in assets_pre:
+            asset.render()
 
         eu.sprite_process()
         eu.render()
-        eu.scroll()
+        
+        for asset in assets_pos:
+            asset.render()
+
+
 
         loop_geral()
 
@@ -237,15 +256,15 @@ def limite(top = None, bot = None, l = None, r = None):
     
 
 
-#classes (ainda não sei o que tô fazendo)
+#classes (agora sei mais ou menos o que tô fazendo)
 class plataforma(pygame.sprite.Sprite):
     def __init__(self, x0, xf, y0, yf):
-        pygame.sprite.Sprite.__init__(self)
         self.x0 = x0
         self.xf = xf
         self.y0 = y0
         self.yf = yf
         self.rect = pygame.Rect(x0, y0, (xf - x0), (yf - y0))
+        #print(self.rect)
 
     def linha_vermelha(self):
         cor = (255, 0 ,0)
@@ -254,7 +273,7 @@ class plataforma(pygame.sprite.Sprite):
         pygame.draw.rect(screen, cor, pygame.Rect(self.rect.left, self.rect.top, 1, self.rect.height))
         pygame.draw.rect(screen, cor, pygame.Rect(self.rect.right, self.rect.top, 1, self.rect.height))
   
-class player(pygame.sprite.Sprite):
+class player():
     def __init__(self, x, y):
 
         self.escala = escala_geral
@@ -262,13 +281,12 @@ class player(pygame.sprite.Sprite):
         self.scr_w = screen.get_width()
         self.flip = False
         self.vel_y = 0
-        self.vel_x = 3
+        self.vel_x = 4
         self.movimento_esquerda = False
         self.movimento_direita = False
         self.pulando = True
         self.vel_terminal = 15
 
-        pygame.sprite.Sprite.__init__(self)
         self.sprite = pygame.image.load('sprites/player.png')
         self.sprite = pygame.transform.scale(self.sprite, (int(self.sprite.get_width() * self.escala), int(self.sprite.get_height() * self.escala)))
         self.rect = self.sprite.get_rect()
@@ -303,12 +321,14 @@ class player(pygame.sprite.Sprite):
             delta_x = ((time.perf_counter() - self.movimento_esquerda) * self.vel_x *-1)*100
             self.movimento_esquerda = time.perf_counter()
             self.flip = True
+            #delta_x -= self.vel_x
         elif self.movimento_direita != False:
             delta_x = ((time.perf_counter() - self.movimento_direita) * self.vel_x)*100
             self.movimento_direita = time.perf_counter()
         if int(delta_x) != 0:
             delta_x = self.vel_x * round(delta_x / self.vel_x)
-            print(delta_x)
+            #print(delta_x)
+            #delta_x = self.vel_x
 
         if self.pulando != False:
 
@@ -346,7 +366,7 @@ class player(pygame.sprite.Sprite):
     def render(self):
         screen.blit(pygame.transform.flip(self.sprite, self.flip, False), self.rect)
 
-    def check_colid_chao(self, chao_rect):
+    def check_colid(self, chao_rect):
         after_left = False
         before_right = False
         below_top = False
@@ -420,7 +440,7 @@ class background(pygame.sprite.Sprite):
         for n in range (0, len(os.listdir(folder))):
             self.layers.append(f'{folder}/{n+1}.png')
 
-    def load(self, escala):
+    def load(self, chao):
 
         lista = list()
 
@@ -431,11 +451,11 @@ class background(pygame.sprite.Sprite):
             img_h = sprite.get_height()
 
             if self.y_list[n] == 0 and img_h != 900:
-                correcao = 900/(img_h*escala)
+                correcao = (900 - chao)/(img_h*escala_geral)
                 #print(correcao)
                 
 
-            sprite = pygame.transform.scale(sprite, (int(img_h * escala * correcao), int(sprite.get_height() * escala * correcao)))
+            sprite = pygame.transform.scale(sprite, (int(img_h * escala_geral * correcao), int(sprite.get_height() * escala_geral * correcao)))
             lista.append(sprite)
 
         self.layers_2 = lista
@@ -450,6 +470,21 @@ class background(pygame.sprite.Sprite):
                 #print(n)
                 screen.blit(self.layers_2[n], (self.layers_2[n].get_width()*nr - (paralax[n]/5 * screen_cords[0]), y))
 
+class assetona():
+    def __init__(self, x, y, sprite):
+
+        self.x = x
+        self.y = y
+
+        sprite = pygame.image.load(sprite)
+        self.sprite = pygame.transform.scale(sprite, (int(sprite.get_width() * escala_geral), int(sprite.get_height() * escala_geral)))
+
+    def bot(self):
+
+        self.y = screen.get_height() - self.sprite.get_height()
+
+    def render(self):
+        screen.blit(self.sprite, (self.x, self.y))
 
 
 
@@ -470,7 +505,7 @@ pygame.init()
 pygame.display.set_caption('Presente')
 clock = pygame.time.Clock()
 
-fps = 60
+fps_cap = 90
 
 scr_w = 1600
 scr_h = 900

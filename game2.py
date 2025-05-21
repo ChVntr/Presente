@@ -166,14 +166,14 @@ def level_001():
     global screen
 
     scr_scroll = 0
-    screen = pygame.Surface((3200, scr_h))
+    screen = pygame.Surface((1600*2.5, scr_h))
     screen_cords = (scr_scroll, 0)
 
     # variaveis do plano de fundo
 
     bg_paralax = (4, 2, 0)
     bg_y_list = (0, 0, 0, 0, 0)
-    bg = background('sprites/bg/oak_forest', 4, bg_y_list)
+    bg = background('sprites/bg/oak_forest', 5, bg_y_list)
     bg.load(96)
 
     # varias colisoes
@@ -186,18 +186,19 @@ def level_001():
     
     # tu
 
-    eu = player(400, 400)
+    eu = player(100, 784)
 
     # assets
 
+    assets_pre = list()
     chao = assetona(0, 0, 'sprites/chao/oak_forest.png')
     chao.bot()
-
-    assets_pre = list()
     assets_pre.append(chao)
+    assets_pre.append( assetona(1890, 550, 'sprites/assets/panda_sign.png') )
+
     assets_pos = list()
     assets_pos.append(assetona(-50, 784, 'sprites/assets/grama_amarela.png'))
-
+    
     while True:
 
         eu.movimento()

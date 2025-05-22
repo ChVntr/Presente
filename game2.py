@@ -32,9 +32,7 @@ def loop_geral():
     clock.tick(fps_cap)
     event_buffer()
     sair()
-    tela.blit(screen, screen_cords)
-    pygame.display.flip()
-    screen.fill((0, 0, 0))
+    screen_update()
     #print(int(clock.get_fps()))
     
 def sair():
@@ -174,49 +172,89 @@ def level_001():
 
     bg_paralax = (4, 2, 0)
     bg_y_list = (0, 0, 0, 0, 0)
-    bg = background('sprites/bg/oak_forest', 5, bg_y_list)
+    bg = background('sprites/bg/oak_forest', 5, bg_y_list, bg_paralax)
     bg.load(96)
 
     # varias colisoes
 
     colid_lista = list()
-    colid_lista += limite(top=False, bot=False)
+    colid_lista += limite(top=False, bot=False, l=False)
 
-    chao_colid = plataforma(0, screen.get_width(), screen.get_height()-96, screen.get_height())
+    chao_colid = plataforma(-200, screen.get_width(), screen.get_height()-96, screen.get_height())
     colid_lista.append(chao_colid)
     
     # tu
 
-    eu = player(100, 784)
+    eu = player(-100, 784)
 
-    # assets 
+    # assets e renderização
 
-    assets_pre = list()
+    render_list = list()
+
+    render_list.append(bg)
+
     chao = assetona(0, 0, 'sprites/chao/oak_forest.png', -1)
     chao.bot()
-    assets_pre.append(chao)
-    assets_pre.append( assetona(1890, 550, 'sprites/assets/panda_sign.png') )
-    #assets_pre.append(rndm_asset(0, 784, 'sprites/assets/grama_amarela', 30, 5, 10))
+    render_list.append(chao)
 
-    assets_pos = list()
-    #assets_pos.append(assetona(-50, 784, 'sprites/assets/grama_amarela.png'))
+    render_list.append( assetona(1890, 550, 'sprites/assets/panda_sign.png') )
+
+    grama_min = 20
+    grama_max = 100
+    preda_min = 200
+    preda_max = 500
+
+    render_list.append(rndm_asset(0, 804, 'sprites/assets/grama_amarela', -1, grama_min, grama_max))
+    render_list.append(rndm_asset(0, 804, 'sprites/assets/preda', -1, preda_min, preda_max))
+    render_list.append(rndm_asset(0, 804, 'sprites/assets/grama_amarela', -1, grama_min, grama_max))
     
+    render_list.append(eu)
+
+    render_list.append(rndm_asset(0, 804, 'sprites/assets/grama_amarela', -1, grama_min, grama_max))
+    render_list.append(rndm_asset(0, 812, 'sprites/assets/preda', -1, preda_min, preda_max))
+    render_list.append(rndm_asset(0, 812, 'sprites/assets/grama_amarela', -1, grama_min, grama_max))
+    
+
+    f_in = time.perf_counter()
+    cutscene = True
+    while cutscene:
+            
+        for obj in render_list:
+            obj.render()
+        
+        cutscene = fade_in(f_in, 2)
+        loop_geral()
+
+    cutscene = True
+    eu.movimento_direita = time.perf_counter() 
+    while eu.rect.center[0] < 400:
+
+        event_buffer_get()
+
+        eu.movimento()
+        for item in colid_lista:
+            eu.check_colid(item.rect)
+        eu.scroll()
+        eu.sprite_process()
+            
+        for obj in render_list:
+            obj.render()
+        
+        loop_geral()
+        
+    eu.movimento_direita = False
+    colid_lista += limite(top=False, bot=False, r=False)
+
     while True:
 
         eu.movimento()
         for item in colid_lista:
             eu.check_colid(item.rect)
         eu.scroll()
-        bg.render(bg_paralax)
-
-        for asset in assets_pre:
-            asset.render()
-
         eu.sprite_process()
-        eu.render()
         
-        for asset in assets_pos:
-            asset.render()
+        for obj in render_list:
+            obj.render()
 
 
 
@@ -256,7 +294,31 @@ def limite(top = None, bot = None, l = None, r = None):
 
     return barreiras
 
+def screen_update():
+    tela.blit(screen, screen_cords)
+    pygame.display.flip()
+    screen.fill((0, 0, 0))
     
+def fade_in(tempo, segundos):
+
+    tempo = time.perf_counter() - tempo
+
+    surface_fade = pygame.Surface((scr_w, scr_h), pygame.SRCALPHA)
+
+    alpha = int(255 - (tempo/segundos * 255))
+
+    if alpha < 0: alpha = 0
+
+    surface_fade.fill((0, 0, 0, alpha))
+    screen.blit(surface_fade, (0, 0))
+
+
+    if tempo >= segundos:
+        return False
+    else: return True
+
+
+
 
 
 #classes (agora sei mais ou menos o que tô fazendo)
@@ -434,12 +496,13 @@ class player():
         #print(self.scr_scroll)
 
 class background(pygame.sprite.Sprite):
-    def __init__(self, folder, repts, y_list):
+    def __init__(self, folder, repts, y_list, paralax):
 
         self.folder = folder
         self.layers = list()
         self.repts = repts
         self.y_list = y_list
+        self.paralax = paralax
 
         for n in range (0, len(os.listdir(folder))):
             self.layers.append(f'{folder}/{n+1}.png')
@@ -464,14 +527,14 @@ class background(pygame.sprite.Sprite):
 
         self.layers_2 = lista
 
-    def render(self, paralax):
+    def render(self):
 
         scr_w = screen.get_width()
 
         for nr in range(0, self.repts):
             for n in range(0, len(self.layers_2)):
 
-                x = self.layers_2[n].get_width()*nr - (paralax[n]/5 * screen_cords[0]) 
+                x = self.layers_2[n].get_width()*nr - (self.paralax[n]/5 * screen_cords[0]) 
 
                 if x < screen_cords[0]*-1 + 1600 and x > screen_cords[0]*-1 - 800: 
                     if self.y_list[n] == 0: y = 0
@@ -509,15 +572,16 @@ class assetona():
         if not inf: 
             for n in range(0, self.repets):
                 x = self.x + self.img_w * n
-                if x < screen_cords[0]*-1 + 1600 and x > screen_cords[0]*-1 - self.img_w:
-                    screen.blit(self.sprite, (x, self.y))
+                if x > screen_cords[0]*-1 + 1600: return
+                if x > screen_cords[0]*-1 - self.img_w:
+                    screen.blit(self.sprite, (x, self.y))           
         else:
             x = self.x * screen_cords[0] / self.img_w
             while True:
-                if x < screen_cords[0]*-1 + 1600 and x > screen_cords[0]*-1 - self.img_w:
+                if x > screen_cords[0]*-1 + 1600: return
+                if x > screen_cords[0]*-1 - self.img_w:
                     screen.blit(self.sprite, (x, self.y))
                     #print(x)
-                if x > screen_cords[0]*-1 + 1600: break
                 x += self.img_w
 
 class rndm_asset():
@@ -547,20 +611,39 @@ class rndm_asset():
             sprite_list2.append(sprite)
         sprite_list = sprite_list2
 
-        for n in range(0, repets):
+        n = 0
+        p_x = 0
+        while n != repets:
 
             self.sprite_order.append(sprite_list[random.randrange(0, len(sprite_list))])
             
             if n == 0: self.sprite_x_list.append(0)
-            else: self.sprite_x_list.append(x + self.sprite_order[n].get_width() * n + random.randrange(int_min, int_max))
+            else: 
+                x = p_x + self.sprite_order[n].get_width() + random.randrange(int_min, int_max)
+                self.sprite_x_list.append(x)
+                p_x = x
+
+            n += 1
+
+            if x > screen.get_width(): 
+                break
 
         #print(self.sprite_x_list)
 
     def render(self):
 
         for n in range(0, len(self.sprite_x_list)):
-            screen.blit(self.sprite_order[n], (self.sprite_x_list[n], self.y))
+            
+            x = self.sprite_x_list[n]
+            
+            if x > screen_cords[0]*-1 + 1600: 
+                return
+            
+            if x > screen_cords[0]*-1 - self.sprite_order[n].get_width():
+                screen.blit(self.sprite_order[n], (x, self.y - self.sprite_order[n].get_height()))
 
+            
+                
 
 
 #agrupamentos de teclas

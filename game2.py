@@ -143,6 +143,7 @@ def event_buffer():
             ev_buffer.append(event)
             #print(event)
 
+    #print(ev_buffer)
 
     return ev_buffer
 
@@ -150,7 +151,7 @@ def event_buffer_get(hold = None):
 
     global ev_buffer
 
-    retornar = event_buffer()
+    retornar = ev_buffer
 
     if hold != True:
         ev_buffer = list()
@@ -172,8 +173,7 @@ def level_001():
 
     bg_paralax = (4, 2, 0)
     bg_y_list = (0, 0, 0, 0, 0)
-    bg = background('sprites/bg/oak_forest', 5, bg_y_list, bg_paralax)
-    bg.load(96)
+    bg = background('sprites/bg/oak_forest', bg_y_list, bg_paralax, 96)
 
     # varias colisoes
 
@@ -197,22 +197,23 @@ def level_001():
     chao.bot()
     render_list.append(chao)
 
-    render_list.append( assetona(1890, 550, 'sprites/assets/panda_sign.png') )
+    render_list.append( assetona(2000-20, 550, 'sprites/assets/panda_sign.png') )
 
     grama_min = 20
     grama_max = 100
-    preda_min = 200
-    preda_max = 500
+    preda_min = 100
+    preda_max = 700
+    xf = screen.get_width()
 
-    render_list.append(rndm_asset(0, 804, 'sprites/assets/grama_amarela', -1, grama_min, grama_max))
-    render_list.append(rndm_asset(0, 804, 'sprites/assets/preda', -1, preda_min, preda_max))
-    render_list.append(rndm_asset(0, 804, 'sprites/assets/grama_amarela', -1, grama_min, grama_max))
+    render_list.append(rndm_asset(0, xf, 804, 'sprites/assets/grama_amarela', grama_min, grama_max))
+    render_list.append(rndm_asset(0, xf, 804, 'sprites/assets/preda', preda_min, preda_max))
+    render_list.append(rndm_asset(0, xf, 804, 'sprites/assets/grama_amarela', grama_min, grama_max))
     
     render_list.append(eu)
 
-    render_list.append(rndm_asset(0, 804, 'sprites/assets/grama_amarela', -1, grama_min, grama_max))
-    render_list.append(rndm_asset(0, 812, 'sprites/assets/preda', -1, preda_min, preda_max))
-    render_list.append(rndm_asset(0, 812, 'sprites/assets/grama_amarela', -1, grama_min, grama_max))
+    render_list.append(rndm_asset(0, xf, 804, 'sprites/assets/grama_amarela', grama_min, grama_max))
+    render_list.append(rndm_asset(0, xf, 812, 'sprites/assets/preda', preda_min, preda_max))
+    render_list.append(rndm_asset(0, xf, 812, 'sprites/assets/grama_amarela', grama_min, grama_max))
     
 
     f_in = time.perf_counter()
@@ -229,9 +230,7 @@ def level_001():
     eu.movimento_direita = time.perf_counter() 
     while eu.rect.center[0] < 400:
 
-        event_buffer_get()
-
-        eu.movimento()
+        eu.movimento(block_input=True)
         for item in colid_lista:
             eu.check_colid(item.rect)
         eu.scroll()
@@ -265,14 +264,14 @@ def sair_com_esc():
     global saindo
 
     if saindo == False:
-        for event in event_buffer_get(hold=True):
+        for event in ev_buffer:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     saindo = time.perf_counter()
     else:
         print(str(time.perf_counter() - saindo)[:4])
         if (time.perf_counter() - saindo) > 2.0: quit()
-        for event in event_buffer_get(hold=True):
+        for event in ev_buffer:
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_ESCAPE:
                     saindo = False
@@ -317,6 +316,9 @@ def fade_in(tempo, segundos):
         return False
     else: return True
 
+def escala(n):
+
+    return (escala_geral * round(n/escala_geral))
 
 
 
@@ -357,7 +359,7 @@ class player():
         self.rect = self.sprite.get_rect()
         self.rect.center = (x, y)
         
-    def movimento(self, hab_pulo = None):
+    def movimento(self, hab_pulo = None, block_input = None):
 
         if hab_pulo != True: self.pulando = True
 
@@ -366,21 +368,36 @@ class player():
 
         if self.vel_y > 0: self.pulando = True
 
-        for event in event_buffer_get(hold=True):
-            if event.type == pygame.KEYDOWN:
-                if event.key in teclas_esquerda:
-                    self.movimento_esquerda = time.perf_counter()
-                if event.key in teclas_direita:
-                    self.movimento_direita = time.perf_counter()
-                if event.unicode == 'z' and self.pulando == False:
-                    self.pulando = time.perf_counter()
-            elif event.type == pygame.KEYUP:
-                if event.key in teclas_esquerda:
-                    self.movimento_esquerda = False
-                    if self.movimento_direita != False:
+        if block_input != True:
+            for event in ev_buffer:
+                if event.type == pygame.KEYDOWN:
+                    if event.key in teclas_esquerda:
+                        self.movimento_esquerda = time.perf_counter()
+                    if event.key in teclas_direita:
                         self.movimento_direita = time.perf_counter()
-                if event.key in teclas_direita:
-                    self.movimento_direita = False
+                    if event.unicode == 'z' and self.pulando == False:
+                        self.pulando = time.perf_counter()
+                elif event.type == pygame.KEYUP:
+                    if event.key in teclas_esquerda:
+                        self.movimento_esquerda = False
+                        if self.movimento_direita != False:
+                            self.movimento_direita = time.perf_counter()
+                    if event.key in teclas_direita:
+                        self.movimento_direita = False
+
+        if self.pulando != False:
+
+            if time.perf_counter() - self.pulando < 2:
+                self.vel_y = -5
+
+                if block_input != True:
+                    for event in event_buffer_get():
+                        if event.type == pygame.KEYUP:
+                            if event.unicode == 'z':
+                                self.pulando = True
+                                print('parei de pular')
+
+        if block_input != True: event_buffer_get()
 
         if self.movimento_esquerda != False:
             delta_x = ((time.perf_counter() - self.movimento_esquerda) * self.vel_x *-1)*100
@@ -394,19 +411,6 @@ class player():
             delta_x = self.vel_x * round(delta_x / self.vel_x)
             #print(delta_x)
             #delta_x = self.vel_x
-
-        if self.pulando != False:
-
-            if time.perf_counter() - self.pulando < 2:
-                self.vel_y = -5
-
-                for event in event_buffer_get():
-                    if event.type == pygame.KEYUP:
-                        if event.unicode == 'z':
-                            self.pulando = True
-                            print('parei de pular')
-
-        event_buffer_get()
 
         self.vel_y += 0.3
         if self.vel_y > self.vel_terminal: self.vel_y = self.vel_terminal
@@ -496,18 +500,18 @@ class player():
         #print(self.scr_scroll)
 
 class background(pygame.sprite.Sprite):
-    def __init__(self, folder, repts, y_list, paralax):
+    def __init__(self, folder, y_list, paralax, chao):
 
         self.folder = folder
         self.layers = list()
-        self.repts = repts
         self.y_list = y_list
         self.paralax = paralax
 
+        self.scr_h = screen.get_height()
+        self.scr_w = screen.get_width()
+
         for n in range (0, len(os.listdir(folder))):
             self.layers.append(f'{folder}/{n+1}.png')
-
-    def load(self, chao):
 
         lista = list()
 
@@ -515,45 +519,58 @@ class background(pygame.sprite.Sprite):
             sprite = pygame.image.load(self.layers[n]).convert_alpha()
 
             correcao = 1
-            img_h = sprite.get_height()
-
-            if self.y_list[n] == 0 and img_h != 900:
-                correcao = (900 - chao)/(img_h*escala_geral)
+            if self.y_list[n] == 0 and sprite.get_height() != 900:
+                correcao = ((900 - chao)/(sprite.get_height() * escala_geral))
                 #print(correcao)
-                
 
-            sprite = pygame.transform.scale(sprite, (int(img_h * escala_geral * correcao), int(sprite.get_height() * escala_geral * correcao)))
+            w = sprite.get_width() * escala_geral * correcao
+            h = sprite.get_height() * escala_geral * correcao
+
+            w = escala(w)
+            h = escala(h)
+
+            print(w, h)
+
+            sprite = pygame.transform.scale(sprite, (w, h))
             lista.append(sprite)
 
         self.layers_2 = lista
+        self.sprites_w = list()
+
+        for item in self.layers_2:
+
+            self.sprites_w.append(item.get_width())
 
     def render(self):
 
-        scr_w = screen.get_width()
+        last_x = list((0, 0, 0))
 
-        for nr in range(0, self.repts):
-            for n in range(0, len(self.layers_2)):
+        for n in range(0, len(self.layers_2)):
 
-                x = self.layers_2[n].get_width()*nr - (self.paralax[n]/5 * screen_cords[0]) 
+            img_w = self.sprites_w[n]
 
-                if x < screen_cords[0]*-1 + 1600 and x > screen_cords[0]*-1 - 800: 
+            while True:
+
+                prlx = self.paralax[n]/5 * screen_cords[0]
+
+                x = last_x[n] - prlx 
+
+                if x > screen_cords[0]*-1 + 1600: break
+                last_x[n] = x + img_w + prlx
+
+                if x > screen_cords[0]*-1 - img_w: 
                     if self.y_list[n] == 0: y = 0
-                    else: y = scr_h - self.layers_2[n].get_height()
+                    else: y = self.scr_h - self.layers_2[n].get_height()
                     screen.blit(self.layers_2[n], (x, y))
 
 class assetona():
-    def __init__(self, x, y, sprite, repets = None, int_min = None, int_max = None):
+    def __init__(self, x, y, sprite, repets = None):
 
-        self.x = x
-        self.y = y
+        self.x = escala(x)
+        self.y = escala(y)
 
         if repets == None: repets = 1
-        if int_min == None: int_min = 0
-        if int_max == None: int_max = 0
-
         self.repets = repets
-        self.int_min = int_min
-        self.int_max = int_max
 
         sprite = pygame.image.load(sprite)
         self.sprite = pygame.transform.scale(sprite, (int(sprite.get_width() * escala_geral), int(sprite.get_height() * escala_geral)))
@@ -586,11 +603,10 @@ class assetona():
 
 class rndm_asset():
 
-    def __init__(self, x, y, folder, repets = None, int_min = None, int_max = None):
+    def __init__(self, x, xf, y, folder, int_min = None, int_max = None):
 
         self.y = y
 
-        if repets == None: repets = 1
         if int_min == None: int_min = 0
         if int_max == None: int_max = 0
 
@@ -611,24 +627,24 @@ class rndm_asset():
             sprite_list2.append(sprite)
         sprite_list = sprite_list2
 
-        n = 0
+        n=0
         p_x = 0
-        while n != repets:
+        while True:
 
             self.sprite_order.append(sprite_list[random.randrange(0, len(sprite_list))])
             
-            if n == 0: self.sprite_x_list.append(0)
+            if len(self.sprite_x_list) == 0: self.sprite_x_list.append(0)
             else: 
                 x = p_x + self.sprite_order[n].get_width() + random.randrange(int_min, int_max)
+                x = escala(x)
+
+                if x > xf: 
+                    break
+
                 self.sprite_x_list.append(x)
                 p_x = x
 
             n += 1
-
-            if x > screen.get_width(): 
-                break
-
-        #print(self.sprite_x_list)
 
     def render(self):
 

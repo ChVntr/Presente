@@ -185,7 +185,7 @@ def level_001():
     
     # tu
 
-    eu = player(-100, 784, 'sprites/dragao/vermelho', 0.1)
+    eu = player(-100, 784-130, 'sprites/dragao/vermelho', 0.1)
 
     # assets e renderização
 
@@ -209,9 +209,9 @@ def level_001():
     preda_max = 700
     xf = screen.get_width()
 
-    render_list.append(rndm_asset(0, xf, 804, 'sprites/assets/grama_amarela', grama_min, grama_max))
+    render_list.append(rndm_asset(0, casa_x, 804, 'sprites/assets/grama_amarela', grama_min, grama_max))
     render_list.append(rndm_asset(0, casa_x, 804, 'sprites/assets/preda', preda_min, preda_max))
-    render_list.append(rndm_asset(0, xf, 804, 'sprites/assets/grama_amarela', grama_min, grama_max))
+    render_list.append(rndm_asset(0, casa_x, 804, 'sprites/assets/grama_amarela', grama_min, grama_max))
     render_list.append(casa)
     render_list.append(porta)
     
@@ -277,7 +277,7 @@ def level_001():
 
         for obj in render_list:
             obj.render()
-
+        interact(porta, eu, 'vai se fuder')
         
 
         loop_geral()
@@ -445,7 +445,7 @@ class player():
             #print(delta_x)
             #delta_x = self.vel_x
 
-        self.vel_y += 0.3
+        #self.vel_y += 0.3
         if self.vel_y > self.vel_terminal: self.vel_y = self.vel_terminal
 
         delta_y = self.vel_y
@@ -573,8 +573,6 @@ class background(pygame.sprite.Sprite):
 
             w = escala(w)
             h = escala(h)
-
-            print(w, h)
 
             sprite = pygame.transform.scale(sprite, (w, h))
             lista.append(sprite)
@@ -739,7 +737,23 @@ class rndm_asset():
             if x > screen_cords[0]*-1 - self.sprite_order[n].get_width():
                 screen.blit(self.sprite_order[n], (x, self.y - self.sprite_order[n].get_height()))
 
+class interact():
+    def __init__(self, obj, player, texto):
             
+            perto = False
+            longe = True
+
+            dif = player.rect.x - obj.x + 52
+            max_dif = 200
+
+            if dif < max_dif and dif > max_dif*-1:
+                print(texto)
+
+    def fade_in():
+        ''
+
+    def fade_out():
+        ''
                 
 
 

@@ -185,7 +185,7 @@ def level_001():
     
     # tu
 
-    eu = player(-100, 784)
+    eu = player(-100, 784, 'sprites/dragao/vermelho', 0.1)
 
     # assets e renderização
 
@@ -199,6 +199,10 @@ def level_001():
 
     render_list.append( assetona(2000-20, 550, 'sprites/assets/panda_sign.png') )
 
+    casa_x = 3400
+    casa = assetona(casa_x, 316, 'sprites/assets/casa/casa.png')
+    porta = assetona(casa_x + 140, 572, 'sprites/assets/casa/porta/1.png', anim_speed=0.03, anim_folder='sprites/assets/casa/porta')
+
     grama_min = 20
     grama_max = 100
     preda_min = 100
@@ -206,13 +210,15 @@ def level_001():
     xf = screen.get_width()
 
     render_list.append(rndm_asset(0, xf, 804, 'sprites/assets/grama_amarela', grama_min, grama_max))
-    render_list.append(rndm_asset(0, xf, 804, 'sprites/assets/preda', preda_min, preda_max))
+    render_list.append(rndm_asset(0, casa_x, 804, 'sprites/assets/preda', preda_min, preda_max))
     render_list.append(rndm_asset(0, xf, 804, 'sprites/assets/grama_amarela', grama_min, grama_max))
+    render_list.append(casa)
+    render_list.append(porta)
     
     render_list.append(eu)
 
     render_list.append(rndm_asset(0, xf, 804, 'sprites/assets/grama_amarela', grama_min, grama_max))
-    render_list.append(rndm_asset(0, xf, 812, 'sprites/assets/preda', preda_min, preda_max))
+    render_list.append(rndm_asset(0, casa_x, 812, 'sprites/assets/preda', preda_min, preda_max))
     render_list.append(rndm_asset(0, xf, 812, 'sprites/assets/grama_amarela', grama_min, grama_max))
     
 
@@ -234,7 +240,9 @@ def level_001():
         for item in colid_lista:
             eu.check_colid(item.rect)
         eu.scroll()
+        eu.animate()
         eu.sprite_process()
+        
             
         for obj in render_list:
             obj.render()
@@ -244,18 +252,33 @@ def level_001():
     eu.movimento_direita = False
     colid_lista += limite(top=False, bot=False, r=False)
 
+    max_dif = 200
+    porta_rev = True
+    porta.sprite_atual = 10
     while True:
 
         eu.movimento()
         for item in colid_lista:
             eu.check_colid(item.rect)
         eu.scroll()
+        eu.animate()
         eu.sprite_process()
         
+        porta_dif = eu.rect.x - porta.x + 72
+        if porta_dif < max_dif and porta_dif > max_dif*-1:
+            if porta_rev:
+                if porta.sprite_atual == 10: porta.sprite_atual = 0
+                porta_rev = False
+        else: 
+            if not porta_rev:
+                if porta.sprite_atual == 10: porta.sprite_atual = 0
+                porta_rev = True
+        porta.animate(reverse=porta_rev)
+
         for obj in render_list:
             obj.render()
 
-
+        
 
         loop_geral()
 
@@ -341,9 +364,8 @@ class plataforma(pygame.sprite.Sprite):
         pygame.draw.rect(screen, cor, pygame.Rect(self.rect.right, self.rect.top, 1, self.rect.height))
   
 class player():
-    def __init__(self, x, y):
+    def __init__(self, x, y, sprite_folder, anim_speed):
 
-        self.escala = escala_geral
         self.scr_scroll = 0
         self.scr_w = screen.get_width()
         self.flip = False
@@ -353,11 +375,22 @@ class player():
         self.movimento_direita = False
         self.pulando = True
         self.vel_terminal = 15
+        self.anim_speed = anim_speed
 
-        self.sprite = pygame.image.load('sprites/player.png')
-        self.sprite = pygame.transform.scale(self.sprite, (int(self.sprite.get_width() * self.escala), int(self.sprite.get_height() * self.escala)))
-        self.rect = self.sprite.get_rect()
+        sprite_list = list()
+        for n in range (0, len(os.listdir(sprite_folder))):
+            sprite = (f'{sprite_folder}/{n+1}.png')
+            sprite = pygame.image.load(sprite)
+            sprite = pygame.transform.scale(sprite, (int(sprite.get_width() * escala_geral), int(sprite.get_height() * escala_geral)))
+            sprite_list.append(sprite)
+        
+        self.rect = sprite.get_rect()
         self.rect.center = (x, y)
+
+        self.sprite_list = sprite_list
+        self.anim_progress = False
+        self.sprite_atual = 0
+        self.sprite = sprite
         
     def movimento(self, hab_pulo = None, block_input = None):
 
@@ -499,6 +532,18 @@ class player():
             screen_cords = (self.scr_scroll, 0)
         #print(self.scr_scroll)
 
+    def animate(self):
+
+        if self.sprite_atual >= len(self.sprite_list): self.sprite_atual = 0
+
+        if self.anim_progress == False:
+            self.anim_progress = time.perf_counter()
+
+        if time.perf_counter() - self.anim_progress > self.anim_speed:
+            self.sprite = self.sprite_list[self.sprite_atual]
+            self.sprite_atual += 1
+            self.anim_progress = time.perf_counter()
+
 class background(pygame.sprite.Sprite):
     def __init__(self, folder, y_list, paralax, chao):
 
@@ -564,7 +609,7 @@ class background(pygame.sprite.Sprite):
                     screen.blit(self.layers_2[n], (x, y))
 
 class assetona():
-    def __init__(self, x, y, sprite, repets = None):
+    def __init__(self, x, y, sprite, repets = None, anim_folder = None, anim_speed = None):
 
         self.x = escala(x)
         self.y = escala(y)
@@ -572,14 +617,51 @@ class assetona():
         if repets == None: repets = 1
         self.repets = repets
 
+        self.anim_folder = anim_folder
+        self.anim_speed = anim_speed
+        self.anim_progress = False
+
         sprite = pygame.image.load(sprite)
         self.sprite = pygame.transform.scale(sprite, (int(sprite.get_width() * escala_geral), int(sprite.get_height() * escala_geral)))
 
         self.img_w = self.sprite.get_width()
 
+        anim_sprites = list()
+        if self.anim_folder != None:
+
+            for n in range (0, len(os.listdir(anim_folder))):
+                sprite = (f'{anim_folder}/{n+1}.png')
+                sprite = pygame.image.load(sprite)
+                sprite = pygame.transform.scale(sprite, (int(sprite.get_width() * escala_geral), int(sprite.get_height() * escala_geral)))
+
+                anim_sprites.append(sprite)
+
+        self.anim_sprites = anim_sprites
+        self.sprite_atual = 0
+
     def bot(self):
 
         self.y = screen.get_height() - self.sprite.get_height()
+
+    def animate(self, reverse = None, loop = None, boomerang = None, random = None):
+        
+        if self.sprite_atual >= len(self.anim_sprites):
+            if loop == True: self.sprite_atual = 0
+            else: return
+        
+        if self.anim_progress == False:
+            self.anim_progress = time.perf_counter()
+
+        if reverse != True:
+            if time.perf_counter() - self.anim_progress > self.anim_speed:
+                self.sprite = self.anim_sprites[self.sprite_atual]
+                self.sprite_atual += 1
+                self.anim_progress = time.perf_counter()
+        else:
+            if time.perf_counter() - self.anim_progress > self.anim_speed:
+                self.sprite = self.anim_sprites[len(self.anim_sprites) - self.sprite_atual -1]
+                self.sprite_atual += 1
+                self.anim_progress = time.perf_counter()
 
     def render(self):
 
@@ -598,7 +680,6 @@ class assetona():
                 if x > screen_cords[0]*-1 + 1600: return
                 if x > screen_cords[0]*-1 - self.img_w:
                     screen.blit(self.sprite, (x, self.y))
-                    #print(x)
                 x += self.img_w
 
 class rndm_asset():

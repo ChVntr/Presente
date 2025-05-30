@@ -29,6 +29,9 @@ def save_existe():
 
 def loop_geral():
     
+    global ev_buffer
+    ev_buffer = list()
+
     clock.tick(fps_cap)
     event_buffer()
     sair()
@@ -47,6 +50,9 @@ def sair():
 
 def guia_de_cenas(cena):
 
+    global screen_cords
+    global screen
+
     if cena == 0:
         if save_existe():
             with open('save', 'r') as f:
@@ -58,12 +64,111 @@ def guia_de_cenas(cena):
                     return 2
         else:
             return 1
+    
     elif cena == 1:
         criar_save()
         return 2    
+    
     elif cena == 2:
-        level_001()
-        return 2
+        return level_001()
+    
+    elif cena == 3:
+
+        screen_cords = (0, 0)
+
+        screen = pygame.Surface((1600, 900))
+        lista_render = list()
+        colid_lista = list()
+
+        colid_lista += limite(False, False, False)
+
+        eu = player(-100, 784-130)
+
+
+
+        
+
+
+
+
+        lista_render.append(eu)
+
+
+        
+        f_in = time.perf_counter()
+        cutscene = False
+        while cutscene:
+                
+            fundo_prov()
+            for obj in lista_render:
+                obj.render()
+            
+            cutscene = screen_fade(f_in, transit_t)
+            loop_geral()
+
+
+
+        eu.movimento_direita = time.perf_counter() 
+        while eu.rect.x < 200:
+
+            eu.movimento(block_input=True)
+                
+            fundo_prov()
+            for obj in lista_render:
+                obj.render()
+            
+            screen_fade(f_in, transit_t)
+
+            loop_geral()
+        eu.movimento_direita = False
+
+
+
+        while True:
+
+            eu.movimento()
+            for item in colid_lista:
+                eu.check_colid(item.rect)
+
+
+
+            fundo_prov()
+            for obj in lista_render:
+                obj.render()
+
+
+
+            if eu.rect.x < 200: break
+
+
+
+            loop_geral()
+
+
+
+
+        cutscene = True
+        fade_t = time.perf_counter()
+        # mudar o movimento_esquerda para True faz o sprite do player sumir 
+        # e o movimento_direita faz ele ir pra esquera 
+        # eu não tô com paciencia pra arrumar isso
+        eu.movimento_direita = True
+        while cutscene:
+
+            eu.movimento(block_input=True)
+
+            fundo_prov()
+            for obj in lista_render:
+                obj.render()
+
+            cutscene = screen_fade(fade_t, transit_t, True)
+
+            loop_geral()
+
+        return 4
+
+    elif cena == 4:
+        return level_001()
 
 def criar_save():
 
@@ -83,7 +188,7 @@ def criar_save():
 
         draw_text(texto[0], posicao_do_texto[0], posicao_do_texto[1])
 
-        for event in event_buffer_get():
+        for event in ev_buffer:
             if event.type == pygame.TEXTINPUT:
                 text += event.text
                 linha_digitação = True
@@ -147,17 +252,6 @@ def event_buffer():
 
     return ev_buffer
 
-def event_buffer_get(hold = None):
-
-    global ev_buffer
-
-    retornar = ev_buffer
-
-    if hold != True:
-        ev_buffer = list()
-
-    return retornar
-    
 def level_001():
 
     # um monte de variavel da tela
@@ -183,9 +277,6 @@ def level_001():
     chao_colid = plataforma(-200, screen.get_width(), screen.get_height()-96, screen.get_height())
     colid_lista.append(chao_colid)
     
-    # tu
-
-    eu = player(-100, 784-130, 'sprites/dragao/vermelho', 0.1)
 
     # assets e renderização
 
@@ -202,6 +293,16 @@ def level_001():
     casa_x = 3400
     casa = assetona(casa_x, 316, 'sprites/assets/casa/casa.png')
     porta = assetona(casa_x + 140, 572, 'sprites/assets/casa/porta/1.png', anim_speed=0.03, anim_folder='sprites/assets/casa/porta')
+
+
+    # tu
+
+    if cena == 2: eupos = -100
+    elif cena == 4: 
+        eupos = porta.x + porta.sprite.get_width()/2
+        screen_cords = (-(screen.get_width()) + 1600, 0)
+    eu = player(eupos, 784-130)
+    eu.flip = True
 
     grama_min = 20
     grama_max = 100
@@ -222,48 +323,80 @@ def level_001():
     render_list.append(rndm_asset(0, xf, 812, 'sprites/assets/grama_amarela', grama_min, grama_max))
     
 
+    # interações
+
+    lista_interact = list()
+    entrar_casa = interact(porta, eu, texto[11])
+    lista_interact.append(entrar_casa)
+
+
     f_in = time.perf_counter()
-    cutscene = True
+    if cena == 2: cutscene = True
+    else: cutscene = False
     while cutscene:
             
         for obj in render_list:
             obj.render()
         
-        cutscene = fade_in(f_in, 2)
+        cutscene = screen_fade(f_in, 2)
         loop_geral()
 
-    cutscene = True
+
+
+
+
+
+
+    
     eu.movimento_direita = time.perf_counter() 
     while eu.rect.center[0] < 400:
 
         eu.movimento(block_input=True)
         for item in colid_lista:
             eu.check_colid(item.rect)
-        eu.scroll()
-        eu.animate()
-        eu.sprite_process()
-        
+        eu.scroll()        
             
         for obj in render_list:
             obj.render()
         
         loop_geral()
-        
+
+
+
+
+
+
+
     eu.movimento_direita = False
     colid_lista += limite(top=False, bot=False, r=False)
+    render_list.append(entrar_casa)
 
     max_dif = 200
     porta_rev = True
     porta.sprite_atual = 10
-    while True:
+    level = True
+
+    if cena == 4:
+        cutscene = True
+        fade_t = time.perf_counter()
+        while cutscene:
+
+            for obj in render_list:
+                obj.render()
+
+            cutscene = screen_fade(fade_t, transit_t)
+
+            loop_geral()
+
+    while level:
 
         eu.movimento()
         for item in colid_lista:
             eu.check_colid(item.rect)
         eu.scroll()
-        eu.animate()
-        eu.sprite_process()
         
+
+
         porta_dif = eu.rect.x - porta.x + 72
         if porta_dif < max_dif and porta_dif > max_dif*-1:
             if porta_rev:
@@ -275,12 +408,38 @@ def level_001():
                 porta_rev = True
         porta.animate(reverse=porta_rev)
 
+
+        for item in lista_interact:
+            item.update()
+            if item.fade:
+                for event in ev_buffer:
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_UP:
+                            level = False
+
+
+
         for obj in render_list:
             obj.render()
-        interact(porta, eu, 'vai se fuder')
         
 
         loop_geral()
+
+
+
+
+    cutscene = True
+    fade_t = time.perf_counter()
+    while cutscene:
+
+        for obj in render_list:
+            obj.render()
+
+        cutscene = screen_fade(fade_t, transit_t, True)
+
+        loop_geral()
+
+    return 3
 
 def sair_com_esc():
 
@@ -321,20 +480,26 @@ def screen_update():
     pygame.display.flip()
     screen.fill((0, 0, 0))
     
-def fade_in(tempo, segundos):
+def screen_fade(tempo, segundos, out = None):
 
     tempo = time.perf_counter() - tempo
 
-    surface_fade = pygame.Surface((scr_w, scr_h), pygame.SRCALPHA)
+    surface_fade = pygame.Surface((screen.get_width(), screen.get_height()), pygame.SRCALPHA)
 
-    alpha = int(255 - (tempo/segundos * 255))
+
+
+    if out == True:
+        alpha = int(0 + (tempo/segundos * 255))
+    else:
+        alpha = int(255 - (tempo/segundos * 255))
 
     if alpha < 0: alpha = 0
+    if alpha > 255: alpha = 255
 
     surface_fade.fill((0, 0, 0, alpha))
     screen.blit(surface_fade, (0, 0))
 
-
+    print(alpha)
     if tempo >= segundos:
         return False
     else: return True
@@ -342,6 +507,15 @@ def fade_in(tempo, segundos):
 def escala(n):
 
     return (escala_geral * round(n/escala_geral))
+
+def fundo_prov():
+
+    fundo = pygame.draw.rect(screen, (0, 100, 0), (0, 0, screen.get_width(), screen.get_height()))
+
+
+
+
+
 
 
 
@@ -364,7 +538,7 @@ class plataforma(pygame.sprite.Sprite):
         pygame.draw.rect(screen, cor, pygame.Rect(self.rect.right, self.rect.top, 1, self.rect.height))
   
 class player():
-    def __init__(self, x, y, sprite_folder, anim_speed):
+    def __init__(self, x, y):
 
         self.scr_scroll = 0
         self.scr_w = screen.get_width()
@@ -375,7 +549,9 @@ class player():
         self.movimento_direita = False
         self.pulando = True
         self.vel_terminal = 15
-        self.anim_speed = anim_speed
+        self.anim_speed = 0.1
+
+        sprite_folder = 'sprites/dragao/vermelho'
 
         sprite_list = list()
         for n in range (0, len(os.listdir(sprite_folder))):
@@ -424,13 +600,13 @@ class player():
                 self.vel_y = -5
 
                 if block_input != True:
-                    for event in event_buffer_get():
+                    for event in ev_buffer:
                         if event.type == pygame.KEYUP:
                             if event.unicode == 'z':
                                 self.pulando = True
                                 print('parei de pular')
 
-        if block_input != True: event_buffer_get()
+        #if block_input != True: event_buffer_get()
 
         if self.movimento_esquerda != False:
             delta_x = ((time.perf_counter() - self.movimento_esquerda) * self.vel_x *-1)*100
@@ -466,6 +642,8 @@ class player():
             self.flip = False
 
     def render(self):
+
+        self.animate()
         screen.blit(pygame.transform.flip(self.sprite, self.flip, False), self.rect)
 
     def check_colid(self, chao_rect):
@@ -533,6 +711,8 @@ class player():
         #print(self.scr_scroll)
 
     def animate(self):
+
+        self.sprite_process()
 
         if self.sprite_atual >= len(self.sprite_list): self.sprite_atual = 0
 
@@ -609,6 +789,8 @@ class background(pygame.sprite.Sprite):
 class assetona():
     def __init__(self, x, y, sprite, repets = None, anim_folder = None, anim_speed = None):
 
+        self.rendering = False
+
         self.x = escala(x)
         self.y = escala(y)
 
@@ -663,6 +845,8 @@ class assetona():
 
     def render(self):
 
+        self.rendering = False
+
         if self.repets == -1: inf = True
         else: inf = False
         
@@ -671,12 +855,14 @@ class assetona():
                 x = self.x + self.img_w * n
                 if x > screen_cords[0]*-1 + 1600: return
                 if x > screen_cords[0]*-1 - self.img_w:
+                    self.rendering = True
                     screen.blit(self.sprite, (x, self.y))           
         else:
             x = self.x * screen_cords[0] / self.img_w
             while True:
                 if x > screen_cords[0]*-1 + 1600: return
                 if x > screen_cords[0]*-1 - self.img_w:
+                    self.rendering = True
                     screen.blit(self.sprite, (x, self.y))
                 x += self.img_w
 
@@ -740,21 +926,92 @@ class rndm_asset():
 class interact():
     def __init__(self, obj, player, texto):
             
-            perto = False
-            longe = True
+            self.obj = obj
+            self.player = player
+            self.texto = texto
 
-            dif = player.rect.x - obj.x + 52
-            max_dif = 200
+            self.perto = False
 
-            if dif < max_dif and dif > max_dif*-1:
-                print(texto)
+            self.fade = False
 
-    def fade_in():
-        ''
+            self.max_dif = 100
 
-    def fade_out():
-        ''
-                
+            self.cor = list((255, 255, 255, 0))
+
+            #self.x = 0
+
+            self.sprite = cl_texto(self.texto, self.obj.x, self.obj.y, cor_do_texto=self.cor).img
+            self.surface_int = pygame.Surface((screen.get_width(), screen.get_height()), pygame.SRCALPHA)
+
+            self.counter = False
+
+            self.x = obj.x + obj.sprite.get_width()/2 - self.sprite.get_width()/2
+            self.y = obj.y - self.sprite.get_height()
+
+            self.obj_center = self.obj.x + self.obj.sprite.get_width()/2
+
+            self.mltp = 7*100
+
+    def update(self):
+
+        if self.obj.rendering:
+            dif = self.player.rect.center[0] - self.obj_center
+
+            if dif < self.max_dif and dif > self.max_dif*-1:
+                if self.perto:
+                    ''
+                else:
+                    self.fade = True
+                    self.perto = True
+            else:
+                if self.perto:
+                    self.fade = False
+                    self.perto = False
+
+            if self.counter == False:
+                self.counter = time.perf_counter()
+            else:
+                if self.fade: self.cor[3] += (time.perf_counter() - self.counter)*self.mltp
+                else: self.cor[3] -= (time.perf_counter() - self.counter)*self.mltp
+                self.counter = time.perf_counter()
+
+            if self.cor[3] < 0: self.cor[3] = 0
+            if self.cor[3] > 255: self.cor[3] = 255
+
+            if self.cor[3] > 0:
+                self.sprite = cl_texto(self.texto, self.obj.x, self.obj.y, cor_do_texto=self.cor).img
+        else: 
+            self.cor[3] = 0
+
+    def render(self):
+
+        if self.obj.rendering and self.cor[3] > 0:
+            self.surface_int.blit(self.sprite, (self.x, self.y))
+            screen.blit(self.surface_int, (0, 0))
+            self.surface_int = pygame.Surface((screen.get_width(), screen.get_height()), pygame.SRCALPHA)
+
+class cl_texto():
+    def __init__(self, texto, x, y, fonte = None, cor_do_texto = None, menos_um = None):
+
+        if fonte == None: fonte = fonte_padrao()
+        if cor_do_texto == None: cor_do_texto = (255, 255, 255)
+        if menos_um != False: texto = texto [:-1]
+
+
+        self.img = fonte.render(texto, True, cor_do_texto)
+        if len(cor_do_texto) > 3:
+            self.img.set_alpha(cor_do_texto[3])
+        self.fonte = fonte
+
+
+
+
+
+
+
+
+
+
 
 
 #agrupamentos de teclas
@@ -763,9 +1020,6 @@ teclas_cima = (pygame.K_UP,)
 teclas_baixo = (pygame.K_DOWN,)
 teclas_esquerda = (pygame.K_LEFT,)
 teclas_direita = (pygame.K_RIGHT,)
-
-
-
 
 
 
@@ -787,17 +1041,20 @@ texto = ('strings/strings-pt-br')
 texto = (open(texto).readlines())
 
 
+
 #umas variaveis globais
 ev_buffer = list()
 saindo = False
 escala_geral = 4
+
+transit_t = 0.5
 
 
 
 
 
 #loop principal
-cena = 0
+cena = 3
 while True:
     loop_geral()
     cena = guia_de_cenas(cena)

@@ -80,7 +80,7 @@ def guia_de_cenas(cena):
         lista_render = list()
         colid_lista = list()
 
-        colid_lista += limite(False, False, False)
+        colid_lista += limite(r=True).barreiras
 
         eu = player(-100, 784-130)
 
@@ -272,10 +272,9 @@ def level_001():
     # varias colisoes
 
     colid_lista = list()
-    colid_lista += limite(top=False, bot=False, l=False)
 
-    chao_colid = plataforma(-200, screen.get_width(), screen.get_height()-96, screen.get_height())
-    colid_lista.append(chao_colid)
+    #chao_colid = plataforma(-200, screen.get_width(), screen.get_height()-96, screen.get_height())
+    #colid_lista.append(chao_colid)
     
 
     # assets e renderização
@@ -368,7 +367,9 @@ def level_001():
 
 
     eu.movimento_direita = False
-    colid_lista += limite(top=False, bot=False, r=False)
+    
+    colid_lista += limite(l=True, r=True).barreiras
+
     render_list.append(entrar_casa)
 
     max_dif = 200
@@ -392,6 +393,7 @@ def level_001():
 
         eu.movimento()
         for item in colid_lista:
+            if not item.rendering: Break 
             eu.check_colid(item.rect)
         eu.scroll()
         
@@ -459,22 +461,6 @@ def sair_com_esc():
                     saindo = False
                     print('cancelado')
 
-def limite(top = None, bot = None, l = None, r = None):
-
-    barreiras = list()
-
-    topo = plataforma(0, screen.get_width(), 0, 1)
-    fundo = plataforma(0, screen.get_width(), screen.get_height(), screen.get_height()+1)
-    esquerda = plataforma(0, 1, 0, screen.get_height())
-    direita = plataforma(screen.get_width(), screen.get_width()+1, 0, screen.get_height())
-
-    if top != False: barreiras.append(topo)
-    if bot != False: barreiras.append(fundo)
-    if l != False: barreiras.append(esquerda)
-    if r != False: barreiras.append(direita)
-
-    return barreiras
-
 def screen_update():
     tela.blit(screen, screen_cords)
     pygame.display.flip()
@@ -499,7 +485,6 @@ def screen_fade(tempo, segundos, out = None):
     surface_fade.fill((0, 0, 0, alpha))
     screen.blit(surface_fade, (0, 0))
 
-    print(alpha)
     if tempo >= segundos:
         return False
     else: return True
@@ -528,7 +513,8 @@ class plataforma(pygame.sprite.Sprite):
         self.y0 = y0
         self.yf = yf
         self.rect = pygame.Rect(x0, y0, (xf - x0), (yf - y0))
-        #print(self.rect)
+        
+        self.rendering = True
 
     def linha_vermelha(self):
         cor = (255, 0 ,0)
@@ -646,7 +632,7 @@ class player():
         self.animate()
         screen.blit(pygame.transform.flip(self.sprite, self.flip, False), self.rect)
 
-    def check_colid(self, chao_rect):
+    def check_colid(self, obj_rect):
         after_left = False
         before_right = False
         below_top = False
@@ -658,12 +644,13 @@ class player():
         x_dif = 0
         y_dif= 0
 
-        variacao = int(self.rect.width/3.5)
+        #variacao = int(self.rect.width/3.5)
+        variacao = 4
 
-        if self.rect.right - variacao > chao_rect.left: after_left = True
-        if self.rect.left + variacao < chao_rect.right: before_right = True
-        if self.rect.bottom > chao_rect.top: below_top = True
-        if self.rect.top < chao_rect.bottom: above_bottom = True
+        if self.rect.right - variacao > obj_rect.left: after_left = True
+        if self.rect.left + variacao < obj_rect.right: before_right = True
+        if self.rect.bottom > obj_rect.top: below_top = True
+        if self.rect.top < obj_rect.bottom: above_bottom = True
 
         if before_right and after_left: mesmo_y = True
         elif not before_right and not after_left: mesmo_y = True
@@ -671,13 +658,13 @@ class player():
         elif not below_top and not above_bottom: mesmo_x = True
 
         if mesmo_x and mesmo_y:
-            if chao_rect.bottom - self.rect.top < self.rect.bottom - chao_rect.top:
-                y_dif = chao_rect.bottom - self.rect.top 
-            else: y_dif = (self.rect.bottom - chao_rect.top)*-1
+            if obj_rect.bottom - self.rect.top < self.rect.bottom - obj_rect.top:
+                y_dif = obj_rect.bottom - self.rect.top 
+            else: y_dif = (self.rect.bottom - obj_rect.top)*-1
             
-            if self.rect.right - chao_rect.left < chao_rect.right - self.rect.left:
-                x_dif = self.rect.right - chao_rect.left - variacao
-            else: x_dif = (chao_rect.right - self.rect.left)*-1 + variacao
+            if self.rect.right - obj_rect.left < obj_rect.right - self.rect.left:
+                x_dif = self.rect.right - obj_rect.left - variacao
+            else: x_dif = (obj_rect.right - self.rect.left)*-1 + variacao
 
             temp_y_dif = y_dif
             temp_x_dif = x_dif
@@ -1003,6 +990,22 @@ class cl_texto():
             self.img.set_alpha(cor_do_texto[3])
         self.fonte = fonte
 
+class limite():
+    def __init__(self, top = None, bot = None, l = None, r = None):
+
+        barreiras = list()
+
+        self.topo = plataforma(0, screen.get_width(), 0, 1)
+        self.fundo = plataforma(0, screen.get_width(), screen.get_height(), screen.get_height()+1)
+        self.esquerda = plataforma(0, 1, 0, screen.get_height())
+        self.direita = plataforma(screen.get_width(), screen.get_width()+1, 0, screen.get_height())
+
+        if top: barreiras.append(self.topo)
+        if bot: barreiras.append(self.fundo)
+        if l: barreiras.append(self.esquerda)
+        if r: barreiras.append(self.direita)
+
+        self.barreiras = barreiras
 
 
 
@@ -1054,7 +1057,7 @@ transit_t = 0.5
 
 
 #loop principal
-cena = 3
+cena = 2
 while True:
     loop_geral()
     cena = guia_de_cenas(cena)

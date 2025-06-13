@@ -124,6 +124,11 @@ def guia_de_cenas(cena):
 
 
 
+
+        teste = teclas_sprites(100, 500, (pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN))
+        teste.change_alpha(50)
+        lista_render.append(teste)
+
         while True:
 
             eu.movimento()
@@ -140,7 +145,7 @@ def guia_de_cenas(cena):
 
             if eu.rect.x < 200: break
 
-
+            
 
             loop_geral()
 
@@ -281,18 +286,18 @@ def level_001():
 
     render_list = list()
 
-    render_list.append(bg)
+    
 
     chao = assetona(0, 0, 'sprites/chao/oak_forest.png', -1)
     chao.bot()
-    render_list.append(chao)
 
-    render_list.append( assetona(2000-20, 550, 'sprites/assets/panda_sign.png') )
+
 
     casa_x = 3400
     casa = assetona(casa_x, 316, 'sprites/assets/casa/casa.png')
     porta = assetona(casa_x + 140, 572, 'sprites/assets/casa/porta/1.png', anim_speed=0.03, anim_folder='sprites/assets/casa/porta')
 
+    
 
     # tu
 
@@ -308,6 +313,17 @@ def level_001():
     preda_min = 100
     preda_max = 700
     xf = screen.get_width()
+
+    instru1_obj = assetona(400, 500, 'sprites/assets/teclas/seta.png')
+    instru1_int = interact(instru1_obj, eu, texto[12], (pygame.K_LEFT, pygame.K_RIGHT))
+
+    if cena == 2: render_list.append(instru1_obj)
+    
+    render_list.append(bg)
+
+    render_list.append(chao)
+
+    render_list.append( assetona(2000-20, 550, 'sprites/assets/panda_sign.png') )
 
     render_list.append(rndm_asset(0, casa_x, 804, 'sprites/assets/grama_amarela', grama_min, grama_max))
     render_list.append(rndm_asset(0, casa_x, 804, 'sprites/assets/preda', preda_min, preda_max))
@@ -389,7 +405,20 @@ def level_001():
 
             loop_geral()
 
+
+    lista_instrucoes = list()
+    lista_instrucoes.append(list((instru1_obj, instru1_int, False, 0)))
+
+
+    if cena == 2:
+        
+        for item in lista_instrucoes:
+            lista_interact.append(item[1])
+            render_list.append(item[1])
+        
+
     while level:
+
 
         eu.movimento()
         for item in colid_lista:
@@ -411,19 +440,31 @@ def level_001():
         porta.animate(reverse=porta_rev)
 
 
+
         for item in lista_interact:
             item.update()
-            if item.fade:
-                for event in ev_buffer:
-                    if event.type == pygame.KEYDOWN:
-                        if event.key == pygame.K_UP:
-                            level = False
+            if item == entrar_casa:
+                if item.fade:
+                    for event in ev_buffer:
+                        if event.type == pygame.KEYDOWN:
+                            if event.key == pygame.K_UP:
+                                level = False
 
-
+        for item in lista_instrucoes:
+            if item[3] < 3:
+                if instru1_int.fade != item[2]:
+                    item[3] = item[3] + 1
+                    item[2] = not item[2]
+                if item[3] == 3:
+                    render_list.remove(item[1])
+                    render_list.remove(item[0])
+                    lista_interact.remove(item[1])
+                    lista_instrucoes.remove(item)
 
         for obj in render_list:
             obj.render()
         
+
 
         loop_geral()
 
@@ -911,7 +952,7 @@ class rndm_asset():
                 screen.blit(self.sprite_order[n], (x, self.y - self.sprite_order[n].get_height()))
 
 class interact():
-    def __init__(self, obj, player, texto):
+    def __init__(self, obj, player, texto, teclas = None):
             
             self.obj = obj
             self.player = player
@@ -938,6 +979,10 @@ class interact():
             self.obj_center = self.obj.x + self.obj.sprite.get_width()/2
 
             self.mltp = 7*100
+
+            if teclas != None:
+                self.teclas = teclas_sprites(self.x, self.y, teclas)
+            else: self.teclas = False
 
     def update(self):
 
@@ -967,8 +1012,12 @@ class interact():
 
             if self.cor[3] > 0:
                 self.sprite = cl_texto(self.texto, self.obj.x, self.obj.y, cor_do_texto=self.cor).img
+
+            if self.teclas != False: self.teclas.change_alpha(self.cor[3])
         else: 
             self.cor[3] = 0
+
+        
 
     def render(self):
 
@@ -976,6 +1025,7 @@ class interact():
             self.surface_int.blit(self.sprite, (self.x, self.y))
             screen.blit(self.surface_int, (0, 0))
             self.surface_int = pygame.Surface((screen.get_width(), screen.get_height()), pygame.SRCALPHA)
+            if self.teclas != False: self.teclas.render()
 
 class cl_texto():
     def __init__(self, texto, x, y, fonte = None, cor_do_texto = None, menos_um = None):
@@ -1006,6 +1056,98 @@ class limite():
         if r: barreiras.append(self.direita)
 
         self.barreiras = barreiras
+
+class teclas_sprites():
+    def __init__(self, x, y, teclas):
+
+        escala_geral = 2
+
+        tecla_up_sprite = pygame.image.load('sprites/assets/teclas/key_up.png')
+        tecla_up_sprite = pygame.transform.scale(tecla_up_sprite, (int(tecla_up_sprite.get_width() * escala_geral), int(tecla_up_sprite.get_height() * escala_geral)))
+
+        tecla_down_sprite = pygame.image.load('sprites/assets/teclas/key_down.png')
+        tecla_down_sprite = pygame.transform.scale(tecla_down_sprite, (int(tecla_down_sprite.get_width() * escala_geral), int(tecla_down_sprite.get_height() * escala_geral)))
+
+
+
+        seta_sprite = pygame.image.load('sprites/assets/teclas/seta.png')
+        sprite_list = list()
+
+        for item in teclas:
+            if item == pygame.K_UP:
+                sprite = pygame.transform.scale(seta_sprite, (int(seta_sprite.get_width() * escala_geral), int(seta_sprite.get_height() * escala_geral)))
+                sprite = pygame.transform.rotate(sprite, 90)
+                sprite_list.append(sprite)
+                
+            if item == pygame.K_DOWN:
+                sprite = pygame.transform.scale(seta_sprite, (int(seta_sprite.get_width() * escala_geral), int(seta_sprite.get_height() * escala_geral)))
+                sprite = pygame.transform.rotate(sprite, 270)
+                sprite_list.append(sprite)
+
+            if item == pygame.K_LEFT:
+                sprite = pygame.transform.scale(seta_sprite, (int(seta_sprite.get_width() * escala_geral), int(seta_sprite.get_height() * escala_geral)))
+                sprite = pygame.transform.flip(sprite, True, False)
+                sprite_list.append(sprite)
+
+            if item == pygame.K_RIGHT:
+                sprite = pygame.transform.scale(seta_sprite, (int(seta_sprite.get_width() * escala_geral), int(seta_sprite.get_height() * escala_geral)))
+                sprite_list.append(sprite)
+        
+        self.surface_trans = pygame.Surface((screen.get_width(), screen.get_height()), pygame.SRCALPHA)
+
+        self.x = x
+        self.y = y
+
+        self.sprite_list = sprite_list
+        self.teclas = (tecla_up_sprite, tecla_down_sprite)
+        self.timer = False
+        self.press = False
+        self.p_state = False
+        self.ciclo = 1
+        self.tecla_w = tecla_up_sprite.get_width()
+        self.alpha = 255
+
+    def change_alpha(self, alpha):
+
+        self.alpha = alpha
+
+    def render(self):
+
+        if self.timer == False:
+            self.timer = time.perf_counter()
+
+        if time.perf_counter() - self.timer >= 1:
+            self.press = not self.press
+            self.timer = time.perf_counter()
+
+
+        for n in range(0, len(self.sprite_list)):
+
+
+            if self.p_state != self.press:
+                self.p_state = self.press
+                self.ciclo = self.ciclo * 10
+                if self.ciclo > 99:
+                    self.ciclo = int(str(self.ciclo)[:1])+1
+                if int(str(self.ciclo)[:1]) > len(self.sprite_list): self.ciclo = 1 
+            
+            if self.press and n == int(str(self.ciclo)[:1])-1: tecla_sprite = self.teclas[1]
+            else: tecla_sprite = self.teclas[0]
+
+            espaco = self.tecla_w*n + n*8
+            if tecla_sprite == self.teclas[0]: offset = 0
+            else: offset = 8
+
+            sprite = self.sprite_list[n]
+
+            sprite.set_alpha(self.alpha) 
+            tecla_sprite.set_alpha(self.alpha)
+
+            self.surface_trans.blit(tecla_sprite, (self.x + espaco, self.y))
+            self.surface_trans.blit(sprite, (self.x + espaco + sprite.get_width()/5, self.y + offset))
+            screen.blit(self.surface_trans, (0, 0))
+            self.surface_trans = pygame.Surface((screen.get_width(), screen.get_height()), pygame.SRCALPHA)
+            
 
 
 

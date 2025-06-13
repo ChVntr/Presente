@@ -123,6 +123,8 @@ def guia_de_cenas(cena):
         eu.movimento_direita = False
 
 
+        teste = tutorial(500, texto[13], (pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT), eu)
+        lista_render.append(teste)
 
         while True:
 
@@ -254,111 +256,98 @@ def event_buffer():
 
 def level_001():
 
-    # um monte de variavel da tela
+    # bagunça duzinferno
+    for bababoey in (1,):
 
-    global screen_cords
-    global screen
+        # um monte de variavel da tela
 
-    scr_scroll = 0
-    screen = pygame.Surface((1600*2.5, scr_h))
-    screen_cords = (scr_scroll, 0)
+        global screen_cords
+        global screen
 
-    # variaveis do plano de fundo
+        scr_scroll = 0
+        screen = pygame.Surface((1600*2.5, scr_h))
+        screen_cords = (scr_scroll, 0)
 
-    bg_paralax = (4, 2, 0)
-    bg_y_list = (0, 0, 0, 0, 0)
-    bg = background('sprites/bg/oak_forest', bg_y_list, bg_paralax, 96)
+        # variaveis do plano de fundo
 
-    # varias colisoes
+        bg_paralax = (4, 2, 0)
+        bg_y_list = (0, 0, 0, 0, 0)
+        bg = background('sprites/bg/oak_forest', bg_y_list, bg_paralax, 96)
 
-    colid_lista = list()
+        # varias colisoes
 
-    #chao_colid = plataforma(-200, screen.get_width(), screen.get_height()-96, screen.get_height())
-    #colid_lista.append(chao_colid)
-    
+        colid_lista = list()
 
-    # assets e renderização
-
-    render_list = list()
-
-    render_list.append(bg)
-
-    chao = assetona(0, 0, 'sprites/chao/oak_forest.png', -1)
-    chao.bot()
-    render_list.append(chao)
-
-    render_list.append( assetona(2000-20, 550, 'sprites/assets/panda_sign.png') )
-
-    casa_x = 3400
-    casa = assetona(casa_x, 316, 'sprites/assets/casa/casa.png')
-    porta = assetona(casa_x + 140, 572, 'sprites/assets/casa/porta/1.png', anim_speed=0.03, anim_folder='sprites/assets/casa/porta')
-
-
-    # tu
-
-    if cena == 2: eupos = -100
-    elif cena == 4: 
-        eupos = porta.x + porta.sprite.get_width()/2
-        screen_cords = (-(screen.get_width()) + 1600, 0)
-    eu = player(eupos, 784-130)
-    eu.flip = True
-
-    grama_min = 20
-    grama_max = 100
-    preda_min = 100
-    preda_max = 700
-    xf = screen.get_width()
-
-    render_list.append(rndm_asset(0, casa_x, 804, 'sprites/assets/grama_amarela', grama_min, grama_max))
-    render_list.append(rndm_asset(0, casa_x, 804, 'sprites/assets/preda', preda_min, preda_max))
-    render_list.append(rndm_asset(0, casa_x, 804, 'sprites/assets/grama_amarela', grama_min, grama_max))
-    render_list.append(casa)
-    render_list.append(porta)
-    
-    render_list.append(eu)
-
-    render_list.append(rndm_asset(0, xf, 804, 'sprites/assets/grama_amarela', grama_min, grama_max))
-    render_list.append(rndm_asset(0, casa_x, 812, 'sprites/assets/preda', preda_min, preda_max))
-    render_list.append(rndm_asset(0, xf, 812, 'sprites/assets/grama_amarela', grama_min, grama_max))
-    
-
-    # interações
-
-    lista_interact = list()
-    entrar_casa = interact(porta, eu, texto[11])
-    lista_interact.append(entrar_casa)
-
-
-    f_in = time.perf_counter()
-    if cena == 2: cutscene = True
-    else: cutscene = False
-    while cutscene:
-            
-        for obj in render_list:
-            obj.render()
+        #chao_colid = plataforma(-200, screen.get_width(), screen.get_height()-96, screen.get_height())
+        #colid_lista.append(chao_colid)
         
-        cutscene = screen_fade(f_in, 2)
-        loop_geral()
+
+        # assets e renderização
+
+        render_list = list()
+
+        render_list.append(bg)
+
+        chao = assetona(0, 0, 'sprites/chao/oak_forest.png', -1)
+        chao.bot()
+        render_list.append(chao)
+
+        render_list.append( assetona(2000-20, 550, 'sprites/assets/panda_sign.png') )
+
+        casa_x = 3400
+        casa = assetona(casa_x, 316, 'sprites/assets/casa/casa.png')
+        porta = assetona(casa_x + 140, 572, 'sprites/assets/casa/porta/1.png', anim_speed=0.03, anim_folder='sprites/assets/casa/porta')
 
 
+        # tu
 
+        if cena == 2: eupos = -100
+        elif cena == 4: 
+            eupos = porta.x + porta.sprite.get_width()/2
+            screen_cords = (-(screen.get_width()) + 1600, 0)
+        eu = player(eupos, 784-130)
+        eu.flip = True
 
+        grama_min = 20
+        grama_max = 100
+        preda_min = 100
+        preda_max = 700
+        xf = screen.get_width()
 
-
-
-    
-    eu.movimento_direita = time.perf_counter() 
-    while eu.rect.center[0] < 400:
-
-        eu.movimento(block_input=True)
-        for item in colid_lista:
-            eu.check_colid(item.rect)
-        eu.scroll()        
-            
-        for obj in render_list:
-            obj.render()
+        render_list.append(rndm_asset(0, casa_x, 804, 'sprites/assets/grama_amarela', grama_min, grama_max))
+        render_list.append(rndm_asset(0, casa_x, 804, 'sprites/assets/preda', preda_min, preda_max))
+        render_list.append(rndm_asset(0, casa_x, 804, 'sprites/assets/grama_amarela', grama_min, grama_max))
+        render_list.append(casa)
+        render_list.append(porta)
         
-        loop_geral()
+        render_list.append(eu)
+
+        render_list.append(rndm_asset(0, xf, 804, 'sprites/assets/grama_amarela', grama_min, grama_max))
+        render_list.append(rndm_asset(0, casa_x, 812, 'sprites/assets/preda', preda_min, preda_max))
+        render_list.append(rndm_asset(0, xf, 812, 'sprites/assets/grama_amarela', grama_min, grama_max))
+        
+
+        # interações
+
+        lista_interact = list()
+        entrar_casa = interact(porta, eu, texto[11])
+        lista_interact.append(entrar_casa)
+
+
+
+    # cutscenes
+    for bababoey in (1,):
+
+        f_in = time.perf_counter()
+        if cena == 2: cutscene = True
+        else: cutscene = False
+        while cutscene:
+                
+            for obj in render_list:
+                obj.render()
+            
+            cutscene = screen_fade(f_in, 2)
+            loop_geral()
 
 
 
@@ -366,18 +355,95 @@ def level_001():
 
 
 
-    eu.movimento_direita = False
-    
-    colid_lista += limite(l=True, r=True).barreiras
+        
+        eu.movimento_direita = time.perf_counter() 
+        while eu.rect.center[0] < 400:
 
-    render_list.append(entrar_casa)
+            eu.movimento(block_input=True)
+            for item in colid_lista:
+                eu.check_colid(item.rect)
+            eu.scroll()        
+                
+            for obj in render_list:
+                obj.render()
+            
+            loop_geral()
 
-    max_dif = 200
-    porta_rev = True
-    porta.sprite_atual = 10
-    level = True
 
-    if cena == 4:
+
+    # agora sim é o level
+    for bababoey in (1,):
+        eu.movimento_direita = False
+        
+        colid_lista += limite(l=True, r=True).barreiras
+
+        render_list.append(entrar_casa)
+
+        max_dif = 200
+        porta_rev = True
+        porta.sprite_atual = 10
+        level = True
+
+        if cena == 4:
+            cutscene = True
+            fade_t = time.perf_counter()
+            while cutscene:
+
+                for obj in render_list:
+                    obj.render()
+
+                cutscene = screen_fade(fade_t, transit_t)
+
+                loop_geral()
+        elif cena == 2:
+            render_list.append(tutorial(400, texto[14], (pygame.K_LEFT, pygame.K_RIGHT), eu))
+            render_list.append(tutorial(entrar_casa.obj_center, texto[15], (pygame.K_UP,), eu, 99999999999))
+
+        
+        while level:
+
+            eu.movimento()
+            for item in colid_lista:
+                if not item.rendering: Break 
+                eu.check_colid(item.rect)
+            eu.scroll()
+            
+
+
+            porta_dif = eu.rect.x - porta.x + 72
+            if porta_dif < max_dif and porta_dif > max_dif*-1:
+                if porta_rev:
+                    porta.sprite_atual = 10 - porta.sprite_atual
+                    porta_rev = False
+            else: 
+                if not porta_rev:
+                    porta.sprite_atual = 10 - porta.sprite_atual
+                    porta_rev = True
+                    
+
+            porta.animate(reverse=porta_rev)
+
+
+            for item in lista_interact:
+                item.update()
+                if item.fade:
+                    for event in ev_buffer:
+                        if event.type == pygame.KEYDOWN:
+                            if event.key == pygame.K_UP:
+                                level = False
+
+
+
+            for obj in render_list:
+                obj.render()
+            
+
+            loop_geral()
+
+
+
+    # outra cutscene
+    for bababoey in (1,):
         cutscene = True
         fade_t = time.perf_counter()
         while cutscene:
@@ -385,63 +451,11 @@ def level_001():
             for obj in render_list:
                 obj.render()
 
-            cutscene = screen_fade(fade_t, transit_t)
+            cutscene = screen_fade(fade_t, transit_t, True)
 
             loop_geral()
 
-    while level:
-
-        eu.movimento()
-        for item in colid_lista:
-            if not item.rendering: Break 
-            eu.check_colid(item.rect)
-        eu.scroll()
-        
-
-
-        porta_dif = eu.rect.x - porta.x + 72
-        if porta_dif < max_dif and porta_dif > max_dif*-1:
-            if porta_rev:
-                if porta.sprite_atual == 10: porta.sprite_atual = 0
-                porta_rev = False
-        else: 
-            if not porta_rev:
-                if porta.sprite_atual == 10: porta.sprite_atual = 0
-                porta_rev = True
-        porta.animate(reverse=porta_rev)
-
-
-        for item in lista_interact:
-            item.update()
-            if item.fade:
-                for event in ev_buffer:
-                    if event.type == pygame.KEYDOWN:
-                        if event.key == pygame.K_UP:
-                            level = False
-
-
-
-        for obj in render_list:
-            obj.render()
-        
-
-        loop_geral()
-
-
-
-
-    cutscene = True
-    fade_t = time.perf_counter()
-    while cutscene:
-
-        for obj in render_list:
-            obj.render()
-
-        cutscene = screen_fade(fade_t, transit_t, True)
-
-        loop_geral()
-
-    return 3
+        return 3
 
 def sair_com_esc():
 
@@ -462,9 +476,14 @@ def sair_com_esc():
                     print('cancelado')
 
 def screen_update():
+
+    global ui_screen
+
     tela.blit(screen, screen_cords)
+    tela.blit(ui_screen, (0, 0))
     pygame.display.flip()
     screen.fill((0, 0, 0))
+    ui_screen = pygame.Surface((scr_w, scr_h), pygame.SRCALPHA)
     
 def screen_fade(tempo, segundos, out = None):
 
@@ -962,8 +981,12 @@ class interact():
                 else: self.cor[3] -= (time.perf_counter() - self.counter)*self.mltp
                 self.counter = time.perf_counter()
 
-            if self.cor[3] < 0: self.cor[3] = 0
-            if self.cor[3] > 255: self.cor[3] = 255
+            if self.cor[3] < 0: 
+                self.cor[3] = 0
+                self.counter = False
+            if self.cor[3] > 255: 
+                self.cor[3] = 255
+                self.counter = False
 
             if self.cor[3] > 0:
                 self.sprite = cl_texto(self.texto, self.obj.x, self.obj.y, cor_do_texto=self.cor).img
@@ -1007,9 +1030,176 @@ class limite():
 
         self.barreiras = barreiras
 
+class tutorial():
+    def __init__(self, trigger_x, texto, teclas, player, max_states = None):
+        
+        self.player = player
+        self.trigger_x = trigger_x
+
+        self.perto = False
+        self.fade = False
+
+        self.tx = cl_texto(texto, 0, 800)
+        self.teclas = teclas_sprites(0, 0, teclas)
+        self.alpha = 0
+        
+        self.x = 800 - self.tx.img.get_width()/2 + self.teclas.xf/2
+        self.y = 800
+
+        self.teclas.x = self.x - self.teclas.xf - self.teclas.intervalo
+        self.teclas.y = self.y - self.teclas.teclas[0].get_height()/5
+
+        self.state = 0
+        self.max_dif = 100
+        self.counter = False
+        self.mltp = 7*100
+
+        if max_states == None: self.max_states = 1
+        else: self.max_states = max_states
+
+    def render(self):
+
+        if self.state > self.max_states and self.alpha == 0: return
+
+        dif = self.player.rect.center[0] - self.trigger_x
+
+        if dif < self.max_dif and dif > self.max_dif*-1:
+            if self.perto:
+                ''
+            else:
+                self.fade = True
+                self.perto = True
+                self.state += 1
+        else:
+            if self.perto:
+                self.fade = False
+                self.perto = False
+                self.state += 1
+
+        if self.perto == False and self.alpha == 0: return
+        
+        if self.counter == False:
+            self.counter = time.perf_counter()
+        else:
+            if self.fade: self.alpha += (time.perf_counter() - self.counter)*self.mltp
+            else: self.alpha -= (time.perf_counter() - self.counter)*self.mltp
+            self.counter = time.perf_counter()
+
+        if self.alpha < 0: 
+            self.alpha = 0
+            self.counter = False
+        if self.alpha > 255: 
+            self.alpha = 255
+            self.counter = False
 
 
 
+
+        self.tx.img.set_alpha(self.alpha)
+        ui_screen.blit(self.tx.img, (self.x, self.y))
+
+        self.teclas.change_alpha(self.alpha)
+        self.teclas.render(ui_screen)
+
+class teclas_sprites():
+    def __init__(self, x, y, teclas):
+
+        escala_geral = 2
+
+        tecla_up_sprite = pygame.image.load('sprites/assets/teclas/key_up.png')
+        tecla_up_sprite = pygame.transform.scale(tecla_up_sprite, (int(tecla_up_sprite.get_width() * escala_geral), int(tecla_up_sprite.get_height() * escala_geral)))
+
+        tecla_down_sprite = pygame.image.load('sprites/assets/teclas/key_down.png')
+        tecla_down_sprite = pygame.transform.scale(tecla_down_sprite, (int(tecla_down_sprite.get_width() * escala_geral), int(tecla_down_sprite.get_height() * escala_geral)))
+
+
+
+        seta_sprite = pygame.image.load('sprites/assets/teclas/seta.png')
+        sprite_list = list()
+
+        for item in teclas:
+            if item == pygame.K_UP:
+                sprite = pygame.transform.scale(seta_sprite, (int(seta_sprite.get_width() * escala_geral), int(seta_sprite.get_height() * escala_geral)))
+                sprite = pygame.transform.rotate(sprite, 90)
+                sprite_list.append(sprite)
+                
+            if item == pygame.K_DOWN:
+                sprite = pygame.transform.scale(seta_sprite, (int(seta_sprite.get_width() * escala_geral), int(seta_sprite.get_height() * escala_geral)))
+                sprite = pygame.transform.rotate(sprite, 270)
+                sprite_list.append(sprite)
+
+            if item == pygame.K_LEFT:
+                sprite = pygame.transform.scale(seta_sprite, (int(seta_sprite.get_width() * escala_geral), int(seta_sprite.get_height() * escala_geral)))
+                sprite = pygame.transform.flip(sprite, True, False)
+                sprite_list.append(sprite)
+
+            if item == pygame.K_RIGHT:
+                sprite = pygame.transform.scale(seta_sprite, (int(seta_sprite.get_width() * escala_geral), int(seta_sprite.get_height() * escala_geral)))
+                sprite_list.append(sprite)
+        
+        self.surface_trans = pygame.Surface((screen.get_width(), screen.get_height()), pygame.SRCALPHA)
+
+        self.x = x
+        self.y = y
+
+        self.sprite_list = sprite_list
+        self.teclas = (tecla_up_sprite, tecla_down_sprite)
+        self.timer = False
+        self.press = False
+        self.p_state = False
+        self.ciclo = 1
+        self.tecla_w = tecla_up_sprite.get_width()
+        self.alpha = 255
+
+        self.intervalo = 8
+
+        self. xf = tecla_up_sprite.get_width() * len(self.sprite_list) + self.intervalo * (len(self.sprite_list)-1)
+
+    def change_alpha(self, alpha):
+
+        self.alpha = alpha
+
+    def render(self, tela):
+
+        if self.alpha == 0:
+            self.timer = False
+            self.press = False
+            self.p_state = False
+            self.ciclo = 1
+            return
+
+        if self.timer == False:
+            self.timer = time.perf_counter()
+
+        if time.perf_counter() - self.timer >= 1:
+            self.press = not self.press
+            self.timer = time.perf_counter()
+
+
+        for n in range(0, len(self.sprite_list)):
+
+
+            if self.p_state != self.press:
+                self.p_state = self.press
+                self.ciclo = self.ciclo * 10
+                if self.ciclo > 99:
+                    self.ciclo = int(str(self.ciclo)[:1])+1
+                if int(str(self.ciclo)[:1]) > len(self.sprite_list): self.ciclo = 1 
+            
+            if self.press and n == int(str(self.ciclo)[:1])-1: tecla_sprite = self.teclas[1]
+            else: tecla_sprite = self.teclas[0]
+
+            espaco = self.tecla_w*n + n*self.intervalo
+            if tecla_sprite == self.teclas[0]: offset = 0
+            else: offset = self.intervalo
+
+            sprite = self.sprite_list[n]
+
+            sprite.set_alpha(self.alpha) 
+            tecla_sprite.set_alpha(self.alpha)
+
+            tela.blit(tecla_sprite, (self.x + espaco, self.y))
+            tela.blit(sprite, (self.x + espaco + sprite.get_width()/5, self.y + offset))
 
 
 
@@ -1038,6 +1228,7 @@ scr_h = 900
 
 tela = pygame.display.set_mode((scr_w, scr_h))
 screen = pygame.Surface((scr_w, scr_h))
+ui_screen = pygame.Surface((scr_w, scr_h), pygame.SRCALPHA)
 screen_cords = (0,0)
 
 texto = ('strings/strings-pt-br')

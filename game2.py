@@ -74,100 +74,110 @@ def guia_de_cenas(cena):
     
     elif cena == 3:
 
-        screen_cords = (0, 0)
+        # variaveis blablabla
+        for bababoey in (1,):
+            screen_cords = (0, 0)
 
-        screen = pygame.Surface((1600, 900))
-        lista_render = list()
-        colid_lista = list()
+            screen = pygame.Surface((1600, 900))
+            lista_render = list()
+            colid_lista = list()
 
-        colid_lista += limite(r=True).barreiras
+            colid_lista += limite(r=True).barreiras
 
-        eu = player(-100, 784-130)
+            eu = player(-100, 784-130)
 
+            chao = assetona(0, 0, 'sprites/chao/paralele.png', -1)
+            chao.bot()
 
-
-        
-
-
-
-
-        lista_render.append(eu)
-
-
-        
-        f_in = time.perf_counter()
-        cutscene = False
-        while cutscene:
-                
-            fundo_prov()
-            for obj in lista_render:
-                obj.render()
             
-            cutscene = screen_fade(f_in, transit_t)
-            loop_geral()
 
 
 
-        eu.movimento_direita = time.perf_counter() 
-        while eu.rect.x < 200:
-
-            eu.movimento(block_input=True)
-                
-            fundo_prov()
-            for obj in lista_render:
-                obj.render()
             
-            screen_fade(f_in, transit_t)
-
-            loop_geral()
-        eu.movimento_direita = False
-
-
-        teste = tutorial(500, texto[13], (pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT), eu)
-        lista_render.append(teste)
-
-        while True:
-
-            eu.movimento()
-            for item in colid_lista:
-                eu.check_colid(item.rect)
+            lista_render.append(eu)
+            lista_render.append(chao)
 
 
 
-            fundo_prov()
-            for obj in lista_render:
-                obj.render()
+        # cutscene
+        for bababoey in (1,):
+            f_in = time.perf_counter()
+            cutscene = False
+            while cutscene:
+                    
+                fundo_prov()
+                for obj in lista_render:
+                    obj.render()
+                
+                cutscene = screen_fade(f_in, transit_t)
+                loop_geral()
 
 
 
-            if eu.rect.x < 200: break
+            eu.movimento_direita = time.perf_counter() 
+            while eu.rect.x < 200:
+
+                eu.movimento(block_input=True)
+                    
+                fundo_prov()
+                for obj in lista_render:
+                    obj.render()
+                
+                screen_fade(f_in, transit_t)
+
+                loop_geral()
+        
+        
+        
+        # level
+        for bababoey in (1,):
+        
+            eu.movimento_direita = False
+
+            while True:
+
+                eu.movimento()
+                for item in colid_lista:
+                    eu.check_colid(item.rect)
 
 
 
-            loop_geral()
+                fundo_prov()
+                for obj in lista_render:
+                    obj.render()
 
 
 
+                if eu.rect.x < 200: break
 
-        cutscene = True
-        fade_t = time.perf_counter()
-        # mudar o movimento_esquerda para True faz o sprite do player sumir 
-        # e o movimento_direita faz ele ir pra esquera 
-        # eu não tô com paciencia pra arrumar isso
-        eu.movimento_direita = True
-        while cutscene:
 
-            eu.movimento(block_input=True)
 
-            fundo_prov()
-            for obj in lista_render:
-                obj.render()
+                loop_geral()
 
-            cutscene = screen_fade(fade_t, transit_t, True)
 
-            loop_geral()
 
-        return 4
+        # outra cutscene
+        for bababoey in (1,):
+            
+            cutscene = True
+            fade_t = time.perf_counter()
+            # mudar o movimento_esquerda para True faz o sprite do player sumir 
+            # e o movimento_direita faz ele ir pra esquera 
+            # eu não tô com paciencia pra arrumar isso
+            eu.movimento_direita = True
+            while cutscene:
+
+                eu.movimento(block_input=True)
+
+                fundo_prov()
+                for obj in lista_render:
+                    obj.render()
+
+                cutscene = screen_fade(fade_t, transit_t, True)
+
+                loop_geral()
+
+            return 4
 
     elif cena == 4:
         return level_001()
@@ -489,7 +499,7 @@ def screen_fade(tempo, segundos, out = None):
 
     tempo = time.perf_counter() - tempo
 
-    surface_fade = pygame.Surface((screen.get_width(), screen.get_height()), pygame.SRCALPHA)
+    #surface_fade = pygame.Surface((screen.get_width(), screen.get_height()), pygame.SRCALPHA)
 
 
 
@@ -501,8 +511,9 @@ def screen_fade(tempo, segundos, out = None):
     if alpha < 0: alpha = 0
     if alpha > 255: alpha = 255
 
-    surface_fade.fill((0, 0, 0, alpha))
-    screen.blit(surface_fade, (0, 0))
+    ui_screen.fill((0, 0, 0, alpha))
+    #screen.blit(surface_fade, (0, 0))
+
 
     if tempo >= segundos:
         return False
@@ -1248,7 +1259,7 @@ transit_t = 0.5
 
 
 #loop principal
-cena = 2
+cena = 3
 while True:
     loop_geral()
     cena = guia_de_cenas(cena)

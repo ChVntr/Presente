@@ -11,6 +11,7 @@ import pygame
 import time
 import os
 import random
+import math
 
 
 
@@ -76,27 +77,30 @@ def guia_de_cenas(cena):
 
         # variaveis blablabla
         for bababoey in (1,):
-            screen_cords = (0, 0)
+            
 
-            screen = pygame.Surface((1600, 900))
+            screen = pygame.Surface((1500, 900))
+            screen_cords = ((1600 - screen.get_width())/2, (900 - screen.get_height())/2)
             lista_render = list()
             colid_lista = list()
 
             colid_lista += limite(r=True).barreiras
 
-            eu = player(-100, 784-130)
+            eu = player(-100, screen.get_height() - 246)
 
             chao = assetona(0, 0, 'sprites/chao/paralele.png', -1)
             chao.bot()
 
-            
+            porta = assetona(-80, 900, 'sprites/assets/casa/porta_int.png')
+            porta.y = screen.get_height() - (porta.sprite.get_height() + chao.sprite.get_height()) 
+            #porta.sprite = pygame.transform.flip(porta.sprite, True, False)
 
 
 
-            
+            lista_render.append(porta)
             lista_render.append(eu)
             lista_render.append(chao)
-
+            
 
 
         # cutscene
@@ -148,7 +152,7 @@ def guia_de_cenas(cena):
 
 
 
-                if eu.rect.x < 200: break
+                if eu.rect.x < 100: break
 
 
 
@@ -315,7 +319,7 @@ def level_001():
         elif cena == 4: 
             eupos = porta.x + porta.sprite.get_width()/2
             screen_cords = (-(screen.get_width()) + 1600, 0)
-        eu = player(eupos, 784-130)
+        eu = player(eupos, screen.get_height() - 246)
         eu.flip = True
 
         grama_min = 20
@@ -489,6 +493,12 @@ def screen_update():
 
     global ui_screen
 
+    x = 0
+    y = 0
+
+    #if screen.get_height() > 900:
+
+
     tela.blit(screen, screen_cords)
     tela.blit(ui_screen, (0, 0))
     pygame.display.flip()
@@ -525,7 +535,7 @@ def escala(n):
 
 def fundo_prov():
 
-    fundo = pygame.draw.rect(screen, (0, 100, 0), (0, 0, screen.get_width(), screen.get_height()))
+    fundo = pygame.draw.rect(screen, (232-30, 183-30, 150-30), (0, 0, screen.get_width(), screen.get_height()))
 
 
 
@@ -1212,47 +1222,70 @@ class teclas_sprites():
             tela.blit(tecla_sprite, (self.x + espaco, self.y))
             tela.blit(sprite, (self.x + espaco + sprite.get_width()/5, self.y + offset))
 
+class porta_interior():
+    def __init__(self, x, y0, yf):
+
+        self.x = x
+        self.y = y0
+
+        cor = (255, 100, 100, 255)
+
+        a = yf - y0
+        if a < 0: a = a-1
+        b = a/(math.sqrt(3))
+
+        self.surf_trans = pygame.Surface((a, a), pygame.SRCALPHA)
+
+        cords = ([x, 0], [x, a], [b, a])
+
+        pygame.draw.polygon(self.surf_trans, cor, cords)
+        if x > 0:
+            pygame.draw.rect(self.surf_trans, cor, pygame.rect.Rect(0, 0, x, yf)) 
+        
+    def render(self):
+
+        
+        screen.blit(self.surf_trans, (0, self.y))
+        
+
+
+# varias variaveis pra inicialização
+for bababoey in (1,):
+    #agrupamentos de teclas
+    teclas_confirmar = (pygame.K_KP_ENTER, pygame.KSCAN_KP_ENTER, pygame.K_RETURN, pygame.KSCAN_RETURN)
+    teclas_cima = (pygame.K_UP,)
+    teclas_baixo = (pygame.K_DOWN,)
+    teclas_esquerda = (pygame.K_LEFT,)
+    teclas_direita = (pygame.K_RIGHT,)
 
 
 
+    #inicialização do pygame 
+    pygame.init()
+    pygame.display.set_caption('Presente')
+    clock = pygame.time.Clock()
+
+    fps_cap = 90
+
+    scr_w = 1600
+    scr_h = 900
+
+    tela = pygame.display.set_mode((scr_w, scr_h))
+    screen = pygame.Surface((scr_w, scr_h))
+    ui_screen = pygame.Surface((scr_w, scr_h), pygame.SRCALPHA)
+    screen_cords = (0,0)
+
+    texto = ('strings/strings-pt-br')
+    texto = (open(texto).readlines())
 
 
 
-#agrupamentos de teclas
-teclas_confirmar = (pygame.K_KP_ENTER, pygame.KSCAN_KP_ENTER, pygame.K_RETURN, pygame.KSCAN_RETURN)
-teclas_cima = (pygame.K_UP,)
-teclas_baixo = (pygame.K_DOWN,)
-teclas_esquerda = (pygame.K_LEFT,)
-teclas_direita = (pygame.K_RIGHT,)
+    #umas variaveis globais
+    ev_buffer = list()
+    saindo = False
+    escala_geral = 4
 
-
-
-#inicialização do pygame 
-pygame.init()
-pygame.display.set_caption('Presente')
-clock = pygame.time.Clock()
-
-fps_cap = 90
-
-scr_w = 1600
-scr_h = 900
-
-tela = pygame.display.set_mode((scr_w, scr_h))
-screen = pygame.Surface((scr_w, scr_h))
-ui_screen = pygame.Surface((scr_w, scr_h), pygame.SRCALPHA)
-screen_cords = (0,0)
-
-texto = ('strings/strings-pt-br')
-texto = (open(texto).readlines())
-
-
-
-#umas variaveis globais
-ev_buffer = list()
-saindo = False
-escala_geral = 4
-
-transit_t = 0.5
+    transit_t = 0.5
 
 
 

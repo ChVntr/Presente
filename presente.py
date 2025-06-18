@@ -97,7 +97,7 @@ def guia_de_cenas(cena):
 
             panda = assetona(screen.get_width()/1.5, 0, '.data/sprites/h.png')
             panda.y = screen.get_height() - (panda.sprite.get_height() + chao.sprite.get_height())
-            panda.set_npc(eu)
+            panda.set_npc(eu, ((18, 19), (20, 21)), '.data/sprites/panda_d_box.png')
 
             lista_interagir.append(panda.npc_int)
 
@@ -143,9 +143,15 @@ def guia_de_cenas(cena):
         # level
         for bababoey in (1,):
         
-            
+            dialogo = -1
 
             while True:
+
+                if panda.npc_dialogo.run:
+                    panda.npc_dialogo.start()
+                    eu.movimento_direita = False
+                    eu.movimento_esquerda = False
+
 
                 eu.movimento()
                 for item in colid_lista:
@@ -164,7 +170,7 @@ def guia_de_cenas(cena):
                         for event in ev_buffer:
                             if event.type == pygame.KEYDOWN:
                                 if event.key == pygame.K_UP:
-                                    dialogo = True
+                                    panda.npc_dialogo.run = True
                     item.render()
 
 
@@ -271,16 +277,17 @@ def fonte_padrao():
     
     return fonte
 
-def event_buffer():
+def event_buffer(clear = None):
     
     global ev_buffer
+
+    if clear == True:
+        ev_buffer.clear()
+        return
 
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN or event.type == pygame.KEYUP or event.type == pygame.TEXTINPUT:
             ev_buffer.append(event)
-            #print(event)
-
-    #print(ev_buffer)
 
     return ev_buffer
 
@@ -517,8 +524,14 @@ def screen_update():
 
     tela.blit(screen, screen_cords)
     tela.blit(ui_screen, (0, 0))
+
+
+    
     pygame.display.flip()
+
+
     screen.fill((0, 0, 0))
+    tela.fill((0, 0, 0))
     ui_screen = pygame.Surface((scr_w, scr_h), pygame.SRCALPHA)
     
 def screen_fade(tempo, segundos, out = None):
@@ -911,9 +924,10 @@ class assetona():
                     screen.blit(self.sprite, (x, self.y))
                 x += self.img_w
 
-    def set_npc(self, player):
+    def set_npc(self, player, lista_textos, sprite):
 
-        self.npc_int = interact(self, player, texto[16])
+        self.npc_int = interact(self, player, texto[16], 100)
+        self.npc_dialogo = dialogo_box(lista_textos, sprite)
 
 class rndm_asset():
 
@@ -973,7 +987,7 @@ class rndm_asset():
                 screen.blit(self.sprite_order[n], (x, self.y - self.sprite_order[n].get_height()))
 
 class interact():
-    def __init__(self, obj, player, texto):
+    def __init__(self, obj, player, texto, max_dif_increase = None):
             
             self.obj = obj
             self.player = player
@@ -984,6 +998,7 @@ class interact():
             self.fade = False
 
             self.max_dif = 100
+            if max_dif_increase != None: self.max_dif += max_dif_increase
 
             self.cor = list((255, 255, 255, 0))
 
@@ -1161,26 +1176,44 @@ class teclas_sprites():
         seta_sprite = pygame.image.load('.data/sprites/assets/teclas/seta.png')
         sprite_list = list()
 
+        self.eletra = False
+        
+
         for item in teclas:
             if item == pygame.K_UP:
                 sprite = pygame.transform.scale(seta_sprite, (int(seta_sprite.get_width() * escala_geral), int(seta_sprite.get_height() * escala_geral)))
                 sprite = pygame.transform.rotate(sprite, 90)
                 sprite_list.append(sprite)
                 
-            if item == pygame.K_DOWN:
+            elif item == pygame.K_DOWN:
                 sprite = pygame.transform.scale(seta_sprite, (int(seta_sprite.get_width() * escala_geral), int(seta_sprite.get_height() * escala_geral)))
                 sprite = pygame.transform.rotate(sprite, 270)
                 sprite_list.append(sprite)
 
-            if item == pygame.K_LEFT:
+            elif item == pygame.K_LEFT:
                 sprite = pygame.transform.scale(seta_sprite, (int(seta_sprite.get_width() * escala_geral), int(seta_sprite.get_height() * escala_geral)))
                 sprite = pygame.transform.flip(sprite, True, False)
                 sprite_list.append(sprite)
 
-            if item == pygame.K_RIGHT:
+            elif item == pygame.K_RIGHT:
                 sprite = pygame.transform.scale(seta_sprite, (int(seta_sprite.get_width() * escala_geral), int(seta_sprite.get_height() * escala_geral)))
                 sprite_list.append(sprite)
-        
+
+            else:
+                
+                letra_escala = escala_geral-0.5
+                letra = str(item).upper()
+                sprite = cl_texto(letra, 0, 0, cor_do_texto=(0, 0, 0, 255), menos_um=False).img
+                sprite = pygame.transform.scale(sprite, (int(sprite.get_width() * letra_escala), int(sprite.get_height() * letra_escala)))
+                sprite_list.append(sprite)
+                self.eletra = True
+
+                
+
+
+                
+            
+
         self.surface_trans = pygame.Surface((screen.get_width(), screen.get_height()), pygame.SRCALPHA)
 
         self.x = x
@@ -1243,6 +1276,9 @@ class teclas_sprites():
             tecla_sprite.set_alpha(self.alpha)
 
             tela.blit(tecla_sprite, (self.x + espaco, self.y))
+
+            if self.eletra: espaco += self.tecla_w/2 - sprite.get_width()/1.4
+
             tela.blit(sprite, (self.x + espaco + sprite.get_width()/5, self.y + offset))
 
 class porta_interior():
@@ -1270,6 +1306,110 @@ class porta_interior():
         
         screen.blit(self.surf_trans, (0, self.y))
         
+class dialogo_box():
+    def __init__(self, lista_textos, sprite):
+
+        self.run = False
+
+        self.grupos = lista_textos
+
+        self.grupo_atual = 0
+        self.texto_atual = 0
+        self.caractere_atual = 0
+
+
+
+        branco_x = 200
+        branco_w = 1200
+        branco_y = 650
+        branco_h = 200
+
+        margem = 40
+
+        self.branco = pygame.rect.Rect(branco_x, branco_y, branco_w, branco_h)
+
+        sprite = pygame.image.load(sprite)
+
+        sprite_escala = (branco_h - margem*2) / sprite.get_height()
+
+        self.sprite = pygame.transform.scale(sprite, (int(sprite.get_width() * sprite_escala), int(sprite.get_height() * sprite_escala)))
+
+        self.timer = False
+
+        self.rect_dim = (branco_x, branco_w, branco_y, branco_h)
+        self.margem = margem
+
+
+        self.tempo_max = 0.2
+
+        self.tx_x = branco_x + margem*2 + self.sprite.get_width()
+
+        self.tecla = teclas_sprites(0, 0, ('z',)) 
+        self.tecla.x = branco_x + branco_w - self.tecla.tecla_w - margem
+        self.tecla.y = branco_y + branco_h - self.tecla.teclas[0].get_height() - margem
+
+    def start(self):   
+
+        if self.grupo_atual >= len(self.grupos):
+            self.grupo_atual = len(self.grupos)-1
+
+        text_sprite = False
+        line_end = False
+
+        pygame.draw.rect(ui_screen, (0, 0, 0), self.branco)
+        pygame.draw.rect(ui_screen, (255, 255, 255), self.branco, 8)
+        ui_screen.blit(self.sprite, (self.rect_dim[0] + self.margem, self.rect_dim[2] + self.margem)) 
+
+        if self.timer == False or self.timer > self.tempo_max: 
+
+            lista_textos = list(self.grupos[self.grupo_atual])
+            tx = lista_textos[self.texto_atual]
+
+            linha = texto[tx]
+
+            if linha.find('-cmd-') != -1:
+                local = linha.find('-cmdover-')+len('-cmdover-')
+                comando = linha[:local]
+                linha = linha[len(comando):]
+                if comando.find('-sg-') != -1:
+                    ''
+
+            
+            if self.caractere_atual < len(linha): self.caractere_atual +=1 
+            else: line_end = True
+
+            tx = linha[:self.caractere_atual]
+
+            text_sprite = cl_texto(tx, 0, 0)
+
+            tx_y = self.rect_dim[2] + self.rect_dim[3]/4 - text_sprite.img.get_height()/2
+
+            self.timer = time.perf_counter()
+
+        if text_sprite != False:
+
+            ui_screen.blit(text_sprite.img, (self.tx_x, tx_y))
+
+        if line_end:
+            self.tecla.render(ui_screen)
+
+            for event in ev_buffer:
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_z:
+
+                        self.caractere_atual = 0
+                        self.timer = False
+                        line_end = False
+                        self.texto_atual +=1
+                        if self.texto_atual >= len(lista_textos):
+                            self.run = False
+                            self.texto_atual = 0
+                            self.grupo_atual += 1
+                        return
+
+        event_buffer(True)
+
+
 
 
 # varias variaveis pra inicialização

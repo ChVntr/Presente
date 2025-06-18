@@ -20,7 +20,7 @@ import math
 def save_existe():
 
     try:
-        with open('save', 'r') as f:
+        with open('.data/save', 'r') as f:
             tem_save = True
             f.close()
     except:
@@ -56,7 +56,7 @@ def guia_de_cenas(cena):
 
     if cena == 0:
         if save_existe():
-            with open('save', 'r') as f:
+            with open('.data/save', 'r') as f:
                 data = f.readlines()
                 if data[0] == '00' or data[0] == '':
                     f.close()
@@ -79,28 +79,33 @@ def guia_de_cenas(cena):
         for bababoey in (1,):
             
 
-            screen = pygame.Surface((1500, 900))
+            screen = pygame.Surface((1400, 700))
             screen_cords = ((1600 - screen.get_width())/2, (900 - screen.get_height())/2)
             lista_render = list()
             colid_lista = list()
+            lista_interagir = list()
 
             colid_lista += limite(r=True).barreiras
 
             eu = player(-100, screen.get_height() - 246)
 
-            chao = assetona(0, 0, 'sprites/chao/paralele.png', -1)
+            chao = assetona(0, 0, '.data/sprites/chao/paralele.png', -1)
             chao.bot()
 
-            porta = assetona(-80, 900, 'sprites/assets/casa/porta_int.png')
+            porta = assetona(-80, 900, '.data/sprites/assets/casa/porta_int.png')
             porta.y = screen.get_height() - (porta.sprite.get_height() + chao.sprite.get_height()) 
-            #porta.sprite = pygame.transform.flip(porta.sprite, True, False)
 
+            panda = assetona(screen.get_width()/1.5, 0, '.data/sprites/h.png')
+            panda.y = screen.get_height() - (panda.sprite.get_height() + chao.sprite.get_height())
+            panda.set_npc(eu)
 
+            lista_interagir.append(panda.npc_int)
 
             lista_render.append(porta)
+            lista_render.append(panda)
             lista_render.append(eu)
             lista_render.append(chao)
-            
+
 
 
         # cutscene
@@ -131,12 +136,14 @@ def guia_de_cenas(cena):
 
                 loop_geral()
         
-        
-        
+            eu.movimento_direita = False
+
+
+
         # level
         for bababoey in (1,):
         
-            eu.movimento_direita = False
+            
 
             while True:
 
@@ -146,10 +153,19 @@ def guia_de_cenas(cena):
 
 
 
+
                 fundo_prov()
                 for obj in lista_render:
                     obj.render()
 
+                for item in lista_interagir:
+                    item.update()
+                    if item.fade:
+                        for event in ev_buffer:
+                            if event.type == pygame.KEYDOWN:
+                                if event.key == pygame.K_UP:
+                                    dialogo = True
+                    item.render()
 
 
                 if eu.rect.x < 100: break
@@ -188,7 +204,7 @@ def guia_de_cenas(cena):
 
 def criar_save():
 
-    with open('save', 'w') as f:
+    with open('.data/save', 'w') as f:
         f.write('00')
         f.close()
 
@@ -234,7 +250,7 @@ def criar_save():
 
         if quebra: break
 
-    with open('save', 'w') as f:
+    with open('.data/save', 'w') as f:
         f.writelines([text, '\n00'])
         f.close()
 
@@ -250,7 +266,7 @@ def draw_text(texto, x, y, fonte = None, cor_do_texto = None, menos_um = None):
 def fonte_padrao():
 
     font_size = int(screen.get_height() / 25)
-    font_file = 'font/Vipnagorgialla Rg.otf'
+    font_file = '.data/font/Vipnagorgialla Rg.otf'
     fonte = pygame.font.Font(font_file, font_size)
     
     return fonte
@@ -286,7 +302,7 @@ def level_001():
 
         bg_paralax = (4, 2, 0)
         bg_y_list = (0, 0, 0, 0, 0)
-        bg = background('sprites/bg/oak_forest', bg_y_list, bg_paralax, 96)
+        bg = background('.data/sprites/bg/oak_forest', bg_y_list, bg_paralax, 96)
 
         # varias colisoes
 
@@ -302,15 +318,15 @@ def level_001():
 
         render_list.append(bg)
 
-        chao = assetona(0, 0, 'sprites/chao/oak_forest.png', -1)
+        chao = assetona(0, 0, '.data/sprites/chao/oak_forest.png', -1)
         chao.bot()
         render_list.append(chao)
 
-        render_list.append( assetona(2000-20, 550, 'sprites/assets/panda_sign.png') )
+        render_list.append( assetona(2000-20, 550, '.data/sprites/assets/panda_sign.png') )
 
         casa_x = 3400
-        casa = assetona(casa_x, 316, 'sprites/assets/casa/casa.png')
-        porta = assetona(casa_x + 140, 572, 'sprites/assets/casa/porta/1.png', anim_speed=0.03, anim_folder='sprites/assets/casa/porta')
+        casa = assetona(casa_x, 316, '.data/sprites/assets/casa/casa.png')
+        porta = assetona(casa_x + 140, 572, '.data/sprites/assets/casa/porta/1.png', anim_speed=0.03, anim_folder='.data/sprites/assets/casa/porta')
 
 
         # tu
@@ -328,17 +344,17 @@ def level_001():
         preda_max = 700
         xf = screen.get_width()
 
-        render_list.append(rndm_asset(0, casa_x, 804, 'sprites/assets/grama_amarela', grama_min, grama_max))
-        render_list.append(rndm_asset(0, casa_x, 804, 'sprites/assets/preda', preda_min, preda_max))
-        render_list.append(rndm_asset(0, casa_x, 804, 'sprites/assets/grama_amarela', grama_min, grama_max))
+        render_list.append(rndm_asset(0, casa_x, 804, '.data/sprites/assets/grama_amarela', grama_min, grama_max))
+        render_list.append(rndm_asset(0, casa_x, 804, '.data/sprites/assets/preda', preda_min, preda_max))
+        render_list.append(rndm_asset(0, casa_x, 804, '.data/sprites/assets/grama_amarela', grama_min, grama_max))
         render_list.append(casa)
         render_list.append(porta)
         
         render_list.append(eu)
 
-        render_list.append(rndm_asset(0, xf, 804, 'sprites/assets/grama_amarela', grama_min, grama_max))
-        render_list.append(rndm_asset(0, casa_x, 812, 'sprites/assets/preda', preda_min, preda_max))
-        render_list.append(rndm_asset(0, xf, 812, 'sprites/assets/grama_amarela', grama_min, grama_max))
+        render_list.append(rndm_asset(0, xf, 804, '.data/sprites/assets/grama_amarela', grama_min, grama_max))
+        render_list.append(rndm_asset(0, casa_x, 812, '.data/sprites/assets/preda', preda_min, preda_max))
+        render_list.append(rndm_asset(0, xf, 812, '.data/sprites/assets/grama_amarela', grama_min, grama_max))
         
 
         # interações
@@ -577,7 +593,7 @@ class player():
         self.vel_terminal = 15
         self.anim_speed = 0.1
 
-        sprite_folder = 'sprites/dragao/vermelho'
+        sprite_folder = '.data/sprites/dragao/vermelho'
 
         sprite_list = list()
         for n in range (0, len(os.listdir(sprite_folder))):
@@ -846,6 +862,8 @@ class assetona():
         self.anim_sprites = anim_sprites
         self.sprite_atual = 0
 
+        self.npc_int = False
+
     def bot(self):
 
         self.y = screen.get_height() - self.sprite.get_height()
@@ -892,6 +910,10 @@ class assetona():
                     self.rendering = True
                     screen.blit(self.sprite, (x, self.y))
                 x += self.img_w
+
+    def set_npc(self, player):
+
+        self.npc_int = interact(self, player, texto[16])
 
 class rndm_asset():
 
@@ -1018,6 +1040,7 @@ class interact():
 
         if self.obj.rendering and self.cor[3] > 0:
             self.surface_int.blit(self.sprite, (self.x, self.y))
+            #pygame.draw.rect(self.surface_int, (255, 0, 0, 150), pygame.rect.Rect(0, 0, screen.get_width(), screen.get_height()), 5)
             screen.blit(self.surface_int, (0, 0))
             self.surface_int = pygame.Surface((screen.get_width(), screen.get_height()), pygame.SRCALPHA)
 
@@ -1127,15 +1150,15 @@ class teclas_sprites():
 
         escala_geral = 2
 
-        tecla_up_sprite = pygame.image.load('sprites/assets/teclas/key_up.png')
+        tecla_up_sprite = pygame.image.load('.data/sprites/assets/teclas/key_up.png')
         tecla_up_sprite = pygame.transform.scale(tecla_up_sprite, (int(tecla_up_sprite.get_width() * escala_geral), int(tecla_up_sprite.get_height() * escala_geral)))
 
-        tecla_down_sprite = pygame.image.load('sprites/assets/teclas/key_down.png')
+        tecla_down_sprite = pygame.image.load('.data/sprites/assets/teclas/key_down.png')
         tecla_down_sprite = pygame.transform.scale(tecla_down_sprite, (int(tecla_down_sprite.get_width() * escala_geral), int(tecla_down_sprite.get_height() * escala_geral)))
 
 
 
-        seta_sprite = pygame.image.load('sprites/assets/teclas/seta.png')
+        seta_sprite = pygame.image.load('.data/sprites/assets/teclas/seta.png')
         sprite_list = list()
 
         for item in teclas:
@@ -1275,7 +1298,7 @@ for bababoey in (1,):
     ui_screen = pygame.Surface((scr_w, scr_h), pygame.SRCALPHA)
     screen_cords = (0,0)
 
-    texto = ('strings/strings-pt-br')
+    texto = ('.data/strings/strings-pt-br')
     texto = (open(texto).readlines())
 
 

@@ -54,6 +54,7 @@ def guia_de_cenas(cena):
     global screen_cords
     global screen
 
+
     if cena == 0:
         if save_existe():
             with open('.data/save', 'r') as f:
@@ -95,9 +96,21 @@ def guia_de_cenas(cena):
             porta = assetona(-80, 900, '.data/sprites/assets/casa/porta_int.png')
             porta.y = screen.get_height() - (porta.sprite.get_height() + chao.sprite.get_height()) 
 
+            falas = (
+                
+                
+                (61, 72),
+                (28, 33),
+                (74, 79),
+                (35, 41),
+                (43, 50),
+                (52, 59),
+                (81, 90),
+            )
+
             panda = assetona(screen.get_width()/1.5, 0, '.data/sprites/h.png')
             panda.y = screen.get_height() - (panda.sprite.get_height() + chao.sprite.get_height())
-            panda.set_npc(eu, ((18, 19), (20, 21)), '.data/sprites/panda_d_box.png')
+            panda.set_npc(eu, falas, '.data/sprites/panda_d_box.png', '.data/sfx/panda_voz.wav')
 
             lista_interagir.append(panda.npc_int)
 
@@ -305,6 +318,10 @@ def level_001():
         screen = pygame.Surface((1600*2.5, scr_h))
         screen_cords = (scr_scroll, 0)
 
+        ambiente = pygame.mixer.Sound('.data/sfx/floresta_ambiente.mp3')
+        ambiente.play()
+
+
         # variaveis do plano de fundo
 
         bg_paralax = (4, 2, 0)
@@ -483,6 +500,8 @@ def level_001():
     for bababoey in (1,):
         cutscene = True
         fade_t = time.perf_counter()
+        ambiente.fadeout(2)
+        ambiente.stop()
         while cutscene:
 
             for obj in render_list:
@@ -565,6 +584,16 @@ def escala(n):
 def fundo_prov():
 
     fundo = pygame.draw.rect(screen, (232-30, 183-30, 150-30), (0, 0, screen.get_width(), screen.get_height()))
+
+def texto_no_meio(texto, começo, fim, prsv_começo = None, prsv_final = None):
+
+    loc1 = texto.find(começo) + len(começo)
+    loc2 = loc1 + texto[loc1:].find(fim)
+
+    if prsv_começo == True: loc1 -= len(começo)
+    if prsv_final == True: loc2 += len(fim)
+
+    return texto[loc1:loc2]
 
 
 
@@ -924,10 +953,10 @@ class assetona():
                     screen.blit(self.sprite, (x, self.y))
                 x += self.img_w
 
-    def set_npc(self, player, lista_textos, sprite):
+    def set_npc(self, player, lista_textos, sprite, voz):
 
         self.npc_int = interact(self, player, texto[16], 100)
-        self.npc_dialogo = dialogo_box(lista_textos, sprite)
+        self.npc_dialogo = dialogo_box(lista_textos, sprite, voz)
 
 class rndm_asset():
 
@@ -1307,12 +1336,22 @@ class porta_interior():
         screen.blit(self.surf_trans, (0, self.y))
         
 class dialogo_box():
-    def __init__(self, lista_textos, sprite):
+    def __init__(self, lista_textos, sprite, voz):
 
         self.run = False
+        self.voz = pygame.mixer.Sound(voz)
+        self.voz.set_volume(self.voz.get_volume()/4) 
 
-        self.grupos = lista_textos
+        self.grupos = list()
 
+        lista2 = list()
+
+        for item in lista_textos:
+            for n in range(item[0], item[1]+1):
+                lista2.append(n)
+            self.grupos.append(lista2)
+            lista2 = list()
+        
         self.grupo_atual = 0
         self.texto_atual = 0
         self.caractere_atual = 0
@@ -1340,13 +1379,18 @@ class dialogo_box():
         self.margem = margem
 
 
-        self.tempo_max = 0.2
+        self.tempo_max = 0.01
 
         self.tx_x = branco_x + margem*2 + self.sprite.get_width()
 
         self.tecla = teclas_sprites(0, 0, ('z',)) 
         self.tecla.x = branco_x + branco_w - self.tecla.tecla_w - margem
         self.tecla.y = branco_y + branco_h - self.tecla.teclas[0].get_height() - margem
+
+        self.preservados = list()
+        self.cmd_sg = 0
+
+        self.cmd_sg_n = 0
 
     def start(self):   
 
@@ -1360,35 +1404,57 @@ class dialogo_box():
         pygame.draw.rect(ui_screen, (255, 255, 255), self.branco, 8)
         ui_screen.blit(self.sprite, (self.rect_dim[0] + self.margem, self.rect_dim[2] + self.margem)) 
 
-        if self.timer == False or self.timer > self.tempo_max: 
 
-            lista_textos = list(self.grupos[self.grupo_atual])
-            tx = lista_textos[self.texto_atual]
+        lista_textos = list(self.grupos[self.grupo_atual])
+        tx = lista_textos[self.texto_atual]
 
-            linha = texto[tx]
+        linha = texto[tx]
 
-            if linha.find('-cmd-') != -1:
-                local = linha.find('-cmdover-')+len('-cmdover-')
-                comando = linha[:local]
-                linha = linha[len(comando):]
-                if comando.find('-sg-') != -1:
-                    ''
+        cmd_sg_n = self.cmd_sg_n
+        if linha.find('-cmd-') != -1:
+            comando = texto_no_meio(linha, '-cmd-', '-cmdover-', True, True)
+            linha = linha[len(comando):]
+            if comando.find('-sg-') != -1:
+                if self.cmd_sg == 0: self.cmd_sg = 1
+                self.cmd_sg_n = int(texto_no_meio(comando, '-sg-', '-', False))
 
-            
-            if self.caractere_atual < len(linha): self.caractere_atual +=1 
-            else: line_end = True
+        if self.caractere_atual < len(linha): 
+            if self.timer == False or (time.perf_counter() - self.timer) > self.tempo_max: 
+                self.timer = time.perf_counter()
+                self.caractere_atual +=1
+                vari = linha[self.caractere_atual-2:self.caractere_atual-1] 
+                print(vari)
+                if vari != ' ' and vari != '':
+                    self.voz.play() 
+        else: 
+            if self.cmd_sg == 0 or self.cmd_sg >= cmd_sg_n:
+                line_end = True
+            else:
+                self.preservados.append((self.testiculo, self.tx_y))
+                self.texto_atual += 1
+                self.caractere_atual = 0
+                self.cmd_sg += 1
 
-            tx = linha[:self.caractere_atual]
+        tx = linha[:self.caractere_atual]
 
-            text_sprite = cl_texto(tx, 0, 0)
 
-            tx_y = self.rect_dim[2] + self.rect_dim[3]/4 - text_sprite.img.get_height()/2
+        text_sprite = cl_texto(tx, 0, 0)
 
-            self.timer = time.perf_counter()
+        tx_y = self.rect_dim[2] + self.rect_dim[3]/4 - text_sprite.img.get_height()/2 + (text_sprite.img.get_height() * len(self.preservados))
+        self.tx_y = tx_y
+        self.testiculo = text_sprite
+
+
+        
 
         if text_sprite != False:
 
+            for n in range(len(self.preservados)):
+                n -= 1
+                ui_screen.blit(self.preservados[n][0].img, (self.tx_x, self.preservados[n][1]))
+
             ui_screen.blit(text_sprite.img, (self.tx_x, tx_y))
+                
 
         if line_end:
             self.tecla.render(ui_screen)
@@ -1396,7 +1462,9 @@ class dialogo_box():
             for event in ev_buffer:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_z:
-
+                        self.preservados = list()
+                        self.cmd_sg_n = 0
+                        self.cmd_sg = 0
                         self.caractere_atual = 0
                         self.timer = False
                         line_end = False
@@ -1455,7 +1523,7 @@ for bababoey in (1,):
 
 
 #loop principal
-cena = 3
+cena = 2
 while True:
     loop_geral()
     cena = guia_de_cenas(cena)
